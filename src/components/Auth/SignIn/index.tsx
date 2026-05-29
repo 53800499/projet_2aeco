@@ -1,0 +1,140 @@
+/** @format */
+
+"use client";
+import Link from "next/link";
+import { useContext, useState } from "react";
+import Logo from "@/components/Layout/Header/Logo";
+import AuthDialogContext from "@/app/context/AuthDialogContext";
+import { useAuthProfile } from "@/app/context/AuthProfileContext";
+import Loader from "@/components/Common/Loader";
+
+const Signin = ({ signInOpen }: { signInOpen?: any }) => {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const authDialog = useContext(AuthDialogContext);
+  const { signIn } = useAuthProfile();
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await signIn({
+        email: identifier,
+        password,
+      });
+
+      if (!result.session) {
+        setError("Informations incorrectes");
+        authDialog?.setIsFailedDialogOpen(true);
+        setTimeout(() => {
+          authDialog?.setIsFailedDialogOpen(false);
+        }, 1100);
+        return;
+      }
+      setTimeout(() => {
+        signInOpen(false);
+      }, 1200);
+
+      authDialog?.setIsSuccessDialogOpen(true);
+
+      setTimeout(() => {
+        authDialog?.setIsSuccessDialogOpen(false);
+      }, 1100);
+    } catch (err) {
+      setError("Informations incorrectes");
+      authDialog?.setIsFailedDialogOpen(true);
+      setTimeout(() => {
+        authDialog?.setIsFailedDialogOpen(false);
+      }, 1100);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      {/* LOGO */}
+      <div className="mb-6 text-center mx-auto inline-block max-w-[180px]">
+        <Logo logoColor="/images/logo/Logo.png" />
+      </div>
+
+      {/* TITRE */}
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-bold dark:text-white">Bon retour 👋</h2>
+
+        <p className="text-gray dark:text-white/60 mt-3">
+          Connectez-vous pour retrouver vos anciens camarades, consulter les
+          promotions et rejoindre la communauté des anciens élèves du CEG 2
+          Ouidah.
+        </p>
+      </div>
+
+      {/* FORM */}
+      <form onSubmit={handleSubmit}>
+        {/* EMAIL / PHONE */}
+        <div className="mb-5">
+          <input
+            type="text"
+            placeholder="Email ou numéro de téléphone"
+            required
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
+          />
+        </div>
+
+        {/* PASSWORD */}
+        <div className="mb-3">
+          <input
+            type="password"
+            required
+            placeholder="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
+          />
+        </div>
+
+        {/* ERROR */}
+        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+
+        {/* FORGET PASSWORD */}
+        <div className="mb-6 text-right">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-primary hover:underline">
+            Mot de passe oublié ?
+          </Link>
+        </div>
+
+        {/* BUTTON */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-md bg-primary py-3 text-white hover:bg-blue-700 transition disabled:cursor-not-allowed disabled:opacity-70">
+          {loading ? "Connexion..." : "Accéder à mon espace ancien élève"} {loading && <Loader />}
+        </button>
+      </form>
+
+      {/* REGISTER */}
+      <div className="mt-8 text-center">
+        <p className="text-base dark:text-white/70">
+          Vous n’êtes pas encore inscrit ?
+        </p>
+
+        <Link
+          href="/register"
+          className="text-primary font-medium hover:underline">
+          Rejoindre le répertoire des anciens élèves
+        </Link>
+      </div>
+    </>
+  );
+};
+
+export default Signin;
