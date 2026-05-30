@@ -9,37 +9,37 @@ import NextTopLoader from 'nextjs-toploader';
 import SessionProviderComp from "@/components/nextauth/SessionProvider";
 import { AuthDialogProvider } from "./context/AuthDialogContext";
 import { AuthProfileProvider } from "./context/AuthProfileContext";
+import { AuthModalProvider } from "./context/AuthModalContext";
 const inter = Inter({ subsets: ["latin"] });
 
 
 export default function RootLayout({
-  children,
-  session,
+  children
 }: Readonly<{
   children: React.ReactNode;
-  session:any
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-      <NextTopLoader />
-      <AuthDialogProvider>
-      <AuthProfileProvider>
-      <SessionProviderComp session={session}>
-        <ThemeProvider
-          attribute="class"
-          enableSystem={true}
-          defaultTheme="system"
-        >
-          <Aoscompo>
-            <Header />
-            {children}
-            <Footer />
-          </Aoscompo>
-          <ScrollToTop />
-        </ThemeProvider>
-        </SessionProviderComp>
-        </AuthProfileProvider>
+        <NextTopLoader />
+        <AuthDialogProvider>
+          <AuthProfileProvider>
+            <AuthModalProvider>
+              <SessionProviderComp>
+                <ThemeProvider
+                  attribute="class"
+                  enableSystem={true}
+                  defaultTheme="system">
+                  <Aoscompo>
+                    <Header />
+                    {children}
+                    <Footer />
+                  </Aoscompo>
+                  <ScrollToTop />
+                </ThemeProvider>
+              </SessionProviderComp>
+            </AuthModalProvider>
+          </AuthProfileProvider>
         </AuthDialogProvider>
       </body>
     </html>

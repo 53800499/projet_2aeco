@@ -92,15 +92,15 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
     setLoading(true);
     setError(null);
 
-    const redirectTo = typeof window !== "undefined"
+    /* const redirectTo = typeof window !== "undefined"
       ? `${window.location.origin}/onboarding?step=identity`
-      : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/onboarding?step=identity`;
+      : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/onboarding?step=identity`; */
 
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: redirectTo,
+        // emailRedirectTo: redirectTo,
         data: { full_name, phone: phone || "", promo: promo || "" },
       },
     });

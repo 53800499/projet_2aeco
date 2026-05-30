@@ -1,12 +1,12 @@
 /** @format */
 
 "use client";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useContext, useState } from "react";
 import Loader from "@/components/Common/Loader";
 import AuthDialogContext from "@/app/context/AuthDialogContext";
+import { useAuthModal } from "@/app/context/AuthModalContext";
 import Logo from "@/components/Layout/Header/Logo";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
 
@@ -14,7 +14,9 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const authDialog = useContext(AuthDialogContext);
+  const { openSignIn } = useAuthModal();
   const { signUp } = useAuthProfile();
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -26,6 +28,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
         string,
         string
       >;
+      console.log("value :", value);
 
       await signUp({
         email: value.email,
@@ -47,6 +50,8 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
         authDialog?.setIsUserRegistered(false);
       }, 1200);
     } catch (err: any) {
+      console.log("err", err);
+      setError(err?.message || "Impossible de créer votre compte.");
       toast.error(err?.message || "Impossible de créer votre compte.");
     } finally {
       setLoading(false);
@@ -67,6 +72,11 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
           CEG 2 Ouidah — Crée ton profil et reconnecte-toi à ta promotion 🎓
         </p>
       </div>
+      {error && (
+        <div className="mb-4 text-red-600 text-center bg-red-100 dark:bg-red-900 w-full rounded-md border px-5 py-3">
+          {error}
+        </div>
+      )}
 
       {/* FORM */}
       <form onSubmit={handleSubmit}>
@@ -125,7 +135,8 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
           type="submit"
           disabled={loading}
           className="w-full bg-primary text-white py-3 rounded-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70">
-          {loading ? "Création du compte..." : "Rejoindre le répertoire"} {loading && <Loader />}
+          {loading ? "Création du compte..." : "Rejoindre le répertoire"}{" "}
+          {loading && <Loader />}
         </button>
       </form>
 
@@ -138,9 +149,15 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
       {/* LOGIN */}
       <p className="text-center mt-4 text-sm">
         Déjà inscrit ?
-        <Link href="#" className="text-primary ml-2">
+        <button
+          type="button"
+          onClick={() => {
+            signUpOpen?.(false);
+            openSignIn();
+          }}
+          className="text-primary ml-2 hover:underline">
           Se connecter
-        </Link>
+        </button>
       </p>
     </div>
   );

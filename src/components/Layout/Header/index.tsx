@@ -5,9 +5,7 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { headerData } from '../Header/Navigation/menuData'
 import Logo from './Logo'
 import HeaderLink from '../Header/Navigation/HeaderLink'
-import MobileHeaderLink from '../Header/Navigation/MobileHeaderLink'
-import Signin from '@/components/Auth/SignIn'
-import SignUp from '@/components/Auth/SignUp'
+import MobileHeaderLink from "../Header/Navigation/MobileHeaderLink";
 import { useTheme } from 'next-themes'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import { SuccessfullLogin } from '@/components/Auth/AuthDialog/SuccessfulLogin'
@@ -15,6 +13,7 @@ import { FailedLogin } from '@/components/Auth/AuthDialog/FailedLogin'
 import { UserRegistered } from '@/components/Auth/AuthDialog/UserRegistered'
 import AuthDialogContext from '@/app/context/AuthDialogContext'
 import { useAuthProfile } from '@/app/context/AuthProfileContext'
+import { useAuthModal } from "@/app/context/AuthModalContext";
 import ProfileCompletionBanner from '@/components/Auth/ProfileCompletionBanner'
 
 const Header: React.FC = () => {
@@ -22,13 +21,7 @@ const Header: React.FC = () => {
   const { theme, setTheme } = useTheme()
 
   const [navbarOpen, setNavbarOpen] = useState(false)
-  const [sticky, setSticky] = useState(false)
-  const [isSignInOpen, setIsSignInOpen] = useState(false)
-  const [isSignUpOpen, setIsSignUpOpen] = useState(false)
-
-  const navbarRef = useRef<HTMLDivElement>(null)
-  const signInRef = useRef<HTMLDivElement>(null)
-  const signUpRef = useRef<HTMLDivElement>(null)
+  const [sticky, setSticky] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   const handleScroll = () => {
@@ -37,47 +30,34 @@ const Header: React.FC = () => {
 
   const handleClickOutside = (event: MouseEvent) => {
     if (
-      signInRef.current &&
-      !signInRef.current.contains(event.target as Node)
-    ) {
-      setIsSignInOpen(false)
-    }
-    if (
-      signUpRef.current &&
-      !signUpRef.current.contains(event.target as Node)
-    ) {
-      setIsSignUpOpen(false)
-    }
-    if (
       mobileMenuRef.current &&
       !mobileMenuRef.current.contains(event.target as Node) &&
       navbarOpen
     ) {
-      setNavbarOpen(false)
+      setNavbarOpen(false);
     }
   }
 
   useEffect(() => {
-    window.addEventListener('scroll', handleScroll)
-    document.addEventListener('mousedown', handleClickOutside)
+    window.addEventListener("scroll", handleScroll);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      window.removeEventListener('scroll', handleScroll)
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [navbarOpen, isSignInOpen, isSignUpOpen])
-
-  const path = usePathname()
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [navbarOpen]);
 
   useEffect(() => {
-    if (isSignInOpen || isSignUpOpen || navbarOpen) {
+    if (navbarOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
-  }, [isSignInOpen, isSignUpOpen, navbarOpen])
+  }, [navbarOpen])
 
   const authDialog = useContext(AuthDialogContext)
   const { user } = useAuthProfile()
+  const { openSignIn, openSignUp } = useAuthModal();
 
   return (
     <header
@@ -118,42 +98,18 @@ const Header: React.FC = () => {
           </button>
           {!user ? (
             <>
-              <Link
-                href="#"
+              <button
+                type="button"
                 className="hidden lg:block bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white"
-                onClick={() => {
-                  setIsSignInOpen(true);
-                }}>
+                onClick={openSignIn}>
                 Connectez-vous
-              </Link>
-          {isSignInOpen && (
-            <div
-              ref={signInRef}
-              className="fixed top-0 m-0! left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
-              <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-lg bg-white px-8 py-14 text-center dark:bg-darklight">
-                <button
-                  onClick={() => setIsSignInOpen(false)}
-                  className=" hover:bg-gray-200 dark:hover:bg-gray-800 p-1 rounded-full absolute -top-5 -right-3 mr-8 mt-8"
-                  aria-label="Close Sign In Modal">
-                  <Icon
-                    icon="ic:round-close"
-                    className="text-2xl dark:text-white"
-                  />
-                </button>
-                <Signin
-                  signInOpen={(value: boolean) => setIsSignInOpen(value)}
-                />
-              </div>
-            </div>
-          )}
-              <Link
-                href="#"
+              </button>
+              <button
+                type="button"
                 className="hidden lg:block bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                onClick={() => {
-                  setIsSignUpOpen(true);
-                }}>
+                onClick={openSignUp}>
                 Rejoindre le répertoire
-              </Link>
+              </button>
             </>
           ) : (
             <Link
@@ -162,26 +118,6 @@ const Header: React.FC = () => {
             >
               Accéder à mon profil
             </Link>
-          )}
-          {isSignUpOpen && (
-            <div
-              ref={signUpRef}
-              className="fixed top-0 m-0! left-0 w-full h-full bg-black/50 flex items-center justify-center z-50">
-              <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-lg bg-white px-8 py-14 text-center dark:bg-darklight">
-                <button
-                  onClick={() => setIsSignUpOpen(false)}
-                  className=" hover:bg-gray-200 dark:hover:bg-gray-800 p-1 rounded-full absolute -top-5 -right-3 mr-8 mt-8"
-                  aria-label="Close Sign In Modal">
-                  <Icon
-                    icon="ic:round-close"
-                    className="text-2xl dark:text-white"
-                  />
-                </button>
-                <SignUp
-                  signUpOpen={(value: boolean) => setIsSignUpOpen(value)}
-                />
-              </div>
-            </div>
           )}
           <button
             onClick={() => setNavbarOpen(!navbarOpen)}
@@ -234,24 +170,24 @@ const Header: React.FC = () => {
           <div className="mt-4 flex flex-col gap-4 w-full">
             {!user ? (
               <>
-                <Link
-                  href="#"
+                <button
+                  type="button"
                   className="bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white"
                   onClick={() => {
-                    setIsSignInOpen(true);
+                    openSignIn();
                     setNavbarOpen(false);
                   }}>
                   Connectez-vous
-                </Link>
-                <Link
-                  href="#"
+                </button>
+                <button
+                  type="button"
                   className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                   onClick={() => {
-                    setIsSignUpOpen(true);
+                    openSignUp();
                     setNavbarOpen(false);
                   }}>
                   Rejoindre le répertoire
-                </Link>
+                </button>
               </>
             ) : (
               <Link

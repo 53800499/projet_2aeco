@@ -6,6 +6,7 @@ import { useContext, useState } from "react";
 import Logo from "@/components/Layout/Header/Logo";
 import AuthDialogContext from "@/app/context/AuthDialogContext";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
+import { useAuthModal } from "@/app/context/AuthModalContext";
 import Loader from "@/components/Common/Loader";
 
 const Signin = ({ signInOpen }: { signInOpen?: any }) => {
@@ -16,6 +17,7 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
 
   const authDialog = useContext(AuthDialogContext);
   const { signIn } = useAuthProfile();
+  const { openSignUp } = useAuthModal();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -117,7 +119,8 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
           type="submit"
           disabled={loading}
           className="w-full rounded-md bg-primary py-3 text-white hover:bg-blue-700 transition disabled:cursor-not-allowed disabled:opacity-70">
-          {loading ? "Connexion..." : "Accéder à mon espace ancien élève"} {loading && <Loader />}
+          {loading ? "Connexion..." : "Accéder à mon espace ancien élève"}{" "}
+          {loading && <Loader />}
         </button>
       </form>
 
@@ -127,11 +130,15 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
           Vous n’êtes pas encore inscrit ?
         </p>
 
-        <Link
-          href="/register"
+        <button
+          type="button"
+          onClick={() => {
+            signInOpen?.(false);
+            openSignUp();
+          }}
           className="text-primary font-medium hover:underline">
           Rejoindre le répertoire des anciens élèves
-        </Link>
+        </button>
       </div>
     </>
   );
