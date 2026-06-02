@@ -11,7 +11,7 @@ const Footer: FC = () => {
           <div className="md:col-span-4 sm:col-span-6 col-span-12 sm:border-r border-b border-solid border-dark_border flex items-center sm:border-b-0 sm:min-h-25 py-10 shrink-0 ">
             <div className="sm:content-normal sm:text-start text-center content-center sm:w-auto w-full">
               <Link href="/" className="md:block flex justify-center">
-              <Logo logoColor="/images/logo/logo.png" />
+              <Logo logoColor="/images/logo/Logo.png" />
                 
               </Link>
               <h2 className="text-white py-10 text-[32px] leading-tight font-bold">
