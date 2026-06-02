@@ -8,6 +8,7 @@ import { useIsAdmin } from "@/hooks/useAdminApi";
 import { useAuthModal } from "@/app/context/AuthModalContext";
 import SpinnerScreen from "@/components/Common/spinner/spinner-screen";
 import { cn } from "@/lib/utils";
+import Logo from "../Logo";
 
 const navItems = [
   { href: "/admin", label: "Tableau de bord", icon: "📊" },
@@ -60,8 +61,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     <div className="flex min-h-screen bg-slate-100 dark:bg-darkmode">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white p-6 dark:border-dark_border dark:bg-darklight lg:flex">
         <Link href="/" className="mb-8 block">
-          <span className="text-lg font-bold text-primary">2aeco</span>
-          <span className="mt-1 block text-xs text-grey dark:text-white/60">
+          <Logo logoColor="/images/logo/Logo.png" />
+          <span className="mt-1 block text-xl text-center text-grey dark:text-white/60">
             Backoffice
           </span>
         </Link>

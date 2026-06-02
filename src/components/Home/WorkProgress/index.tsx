@@ -44,8 +44,8 @@ const Progresswork = ({ isColorMode }: { isColorMode: Boolean }) => {
               src="/images/work-progress/image.jpg"
               alt="souvenirs CEG 2 Ouidah"
               width={375}
-              height={0}
-              style={{ width: "100%", height: "auto" }}
+              height={300}
+              style={{ width: "100%", height: "100%" }}
               className="md:block hidden"
             />
           </div>
