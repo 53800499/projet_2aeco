@@ -1,7 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Layout/Header";
-import Footer from "@/components/Layout/Footer";
+import LayoutShell from "@/components/Layout/LayoutShell";
 import { ThemeProvider } from "next-themes";
 import ScrollToTop from '@/components/ScrollToTop';
 import Aoscompo from "@/utils/aos";
@@ -31,9 +30,7 @@ export default function RootLayout({
                   enableSystem={true}
                   defaultTheme="system">
                   <Aoscompo>
-                    <Header />
-                    {children}
-                    <Footer />
+                    <LayoutShell>{children}</LayoutShell>
                   </Aoscompo>
                   <ScrollToTop />
                 </ThemeProvider>

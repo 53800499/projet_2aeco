@@ -1,20 +1,23 @@
-import SignUp from "@/components/Auth/SignUp";
-import Breadcrumb from "@/components/Common/Breadcrumb";
-import { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title:
-    "Sign Up | Venus",
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthModal } from "@/app/context/AuthModalContext";
+import SpinnerScreen from "@/components/Common/spinner/spinner-screen";
 
-const SignupPage = () => {
+/** Ouvre la même modale d'inscription que le bouton du header */
+export default function SignupPage() {
+  const { openSignUp } = useAuthModal();
+  const router = useRouter();
+
+  useEffect(() => {
+    openSignUp();
+    router.replace("/");
+  }, [openSignUp, router]);
+
   return (
-    <>
-      <Breadcrumb pageName="Sign Up Page" />
-
-      <SignUp />
-    </>
+    <main className="min-h-[50vh] flex items-center justify-center">
+      <SpinnerScreen />
+    </main>
   );
-};
-
-export default SignupPage;
+}

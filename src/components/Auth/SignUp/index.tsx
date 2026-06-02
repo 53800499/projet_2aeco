@@ -2,57 +2,58 @@
 
 "use client";
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import Loader from "@/components/Common/Loader";
-import AuthDialogContext from "@/app/context/AuthDialogContext";
 import { useAuthModal } from "@/app/context/AuthModalContext";
 import Logo from "@/components/Layout/Header/Logo";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
+import { useAuthFeedback } from "@/hooks/useAuthFeedback";
+import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
 
-const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
+const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const authDialog = useContext(AuthDialogContext);
-  const { openSignIn } = useAuthModal();
+  const { openSignIn, closeSignUp } = useAuthModal();
   const { signUp } = useAuthProfile();
+  const { showSuccess, showError } = useAuthFeedback();
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
       const data = new FormData(e.currentTarget);
-      const value = Object.fromEntries(data.entries()) as Record<
-        string,
-        string
-      >;
-      console.log("value :", value);
+      const value = Object.fromEntries(data.entries()) as Record<string, string>;
 
-      await signUp({
+      const result = await signUp({
         email: value.email,
         password: value.password,
         full_name: value.name,
         phone: value.phone,
-        promo: value.promo
+        promo: value.promo,
       });
 
-      toast.success("Bienvenue dans le répertoire des anciens élèves 🎓");
-      router.push("/onboarding?step=identity");
+      signUpOpen?.(false);
+      closeSignUp();
 
-      setTimeout(() => {
-        signUpOpen?.(false);
-      }, 800);
+      if (result?.session) {
+        showSuccess(AUTH_MESSAGES.registerSuccess);
+        router.push("/onboarding?step=identity");
+        return;
+      }
 
-      authDialog?.setIsUserRegistered(true);
-      setTimeout(() => {
-        authDialog?.setIsUserRegistered(false);
-      }, 1200);
-    } catch (err: any) {
-      console.log("err", err);
-      setError(err?.message || "Impossible de créer votre compte.");
-      toast.error(err?.message || "Impossible de créer votre compte.");
+      const msg = formatAuthError(
+        "Email not confirmed",
+        "Compte créé mais connexion impossible. Désactivez la confirmation email dans Supabase (Auth → Email) pour un accès immédiat."
+      );
+      setError(msg);
+      showError(msg);
+    } catch (err: unknown) {
+      const msg = formatAuthError(err, "Impossible de créer votre compte.");
+      setError(msg);
+      showError(msg);
     } finally {
       setLoading(false);
     }
@@ -60,7 +61,6 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
 
   return (
     <div>
-      {/* HEADER CONTEXTUEL */}
       <div className="mb-6 text-center">
         <div className="flex items-center justify-center">
           <Logo logoColor="/images/logo/Logo.png" />
@@ -78,7 +78,6 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
         </div>
       )}
 
-      {/* FORM */}
       <form onSubmit={handleSubmit}>
         <div className="mb-[18px]">
           <input
@@ -130,7 +129,6 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
           />
         </div>
 
-        {/* CTA */}
         <button
           type="submit"
           disabled={loading}
@@ -140,19 +138,18 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: any }) => {
         </button>
       </form>
 
-      {/* INFO UX */}
       <p className="text-xs text-gray-500 mt-4 text-center dark:text-white/50">
         En rejoignant, tu pourras être visible dans l’annuaire des anciens
         élèves du CEG 2 Ouidah.
       </p>
 
-      {/* LOGIN */}
       <p className="text-center mt-4 text-sm">
         Déjà inscrit ?
         <button
           type="button"
           onClick={() => {
             signUpOpen?.(false);
+            closeSignUp();
             openSignIn();
           }}
           className="text-primary ml-2 hover:underline">

@@ -17,16 +17,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Aucun fichier envoyé." }, { status: 400 });
     }
 
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+    if (!allowed.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Format accepté : JPG, PNG, WebP ou GIF." },
+        { status: 400 }
+      );
+    }
+
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      return NextResponse.json(
+        { error: "L’image ne doit pas dépasser 5 Mo." },
+        { status: 400 }
+      );
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
-          folder: "venus-alumni",
+          folder: "2aeco-alumni",
           resource_type: "image",
           quality: "auto",
-          fetch_format: "auto",
+          fetch_format: "auto"
         },
         (error, result) => {
           if (error || !result) {

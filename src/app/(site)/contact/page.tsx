@@ -10,14 +10,14 @@ export const metadata: Metadata = {
 
 const page = () => {
   const breadcrumbLinks = [
-    { href: "/", text: "Home" },
+    { href: "/", text: "Accuail" },
     { href: "/contact", text: "Contact" },
   ];
   return (
     <>
       <HeroSub
-        title="Contact Us"
-        description="Discover a wealth of insightful materials meticulously crafted to provide you with a comprehensive understanding of the latest trends."
+        title="Contact"
+        description="Besoin d’aide, d’informations ou d’assistance ? Contactez l’équipe de l’amicale des anciens élèves du CEG 2 Ouidah. Nous sommes disponibles pour répondre à toutes vos demandes."
         breadcrumbLinks={breadcrumbLinks}
       />
       <ContactInfo />

@@ -16,5 +16,6 @@ export const headerData: HeaderItem[] = [
     ]
   }, */
 
+  { label: "Plaquette", href: "/plaquette" },
   { label: "Actualités", href: "/blog" },
 ];

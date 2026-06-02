@@ -4,19 +4,24 @@
 
 import { useEffect, useState } from "react";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
+import { useAuthFeedback } from "@/hooks/useAuthFeedback";
+import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
 import ProfileCompletionCard from "@/components/Auth/ProfileCompletionCard";
 import { ProfileRecord } from "@/hooks/useSupabaseProfile";
 import { useRouter } from "next/navigation";
 import HeroSub from "@/components/SharedComponent/HeroSub";
+import SpinnerScreen from "@/components/Common/spinner/spinner-screen";
+import ImageFileInput from "@/components/Common/ImageFileInput";
+import { getOnboardingProgress, ONBOARDING_STEPS } from "@/lib/onboarding";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, profile, profileCompletion, loading, signOut, saveProfile } =
     useAuthProfile();
+  const { showSuccess, showError } = useAuthFeedback();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<ProfileRecord | null>(null);
   const [saving, setSaving] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const breadcrumbLinks = [
     { href: "/", text: "Accueil" },
     { href: "/profile", text: "Profil" }
@@ -31,7 +36,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
-        Chargement du profil…
+        <SpinnerScreen />
       </main>
     );
   }
@@ -40,8 +45,8 @@ export default function ProfilePage() {
       return (
         <>
           <HeroSub
-            title="Actualités & Vie de la communauté"
-            description="Retrouvez les nouvelles de l’amicale, les événements, les témoignages d’anciens élèves, les parcours inspirants et les souvenirs qui continuent de faire vivre la communauté du CEG 2 Ouidah."
+            title="Mon Profil"
+            description="Consultez et mettez à jour vos informations personnelles, votre parcours académique et professionnel, ainsi que vos coordonnées afin de rester connecté à la communauté des anciens élèves du CEG 2 Ouidah."
             breadcrumbLinks={breadcrumbLinks}
           />
           <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
@@ -67,41 +72,14 @@ export default function ProfilePage() {
       await saveProfile({
         ...draft,
         id: user.id,
-        email: draft.email || user.email || ""
+        email: draft.email || user.email || "",
       });
       setEditing(false);
+      showSuccess(AUTH_MESSAGES.profileSaved);
+    } catch (error: unknown) {
+      showError(formatAuthError(error, AUTH_MESSAGES.profileSaveFailed));
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handlePhotoUpload = async (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Impossible d’uploader l’image.");
-      }
-
-      updateDraft("photo", data.url);
-    } catch (error: any) {
-      alert(error?.message || "Impossible d’uploader l’image.");
-    } finally {
-      setUploadingImage(false);
-      event.target.value = "";
     }
   };
 
@@ -130,13 +108,13 @@ export default function ProfilePage() {
   return (
     <>
       <HeroSub
-        title="Actualités & Vie de la communauté"
-        description="Retrouvez les nouvelles de l’amicale, les événements, les témoignages d’anciens élèves, les parcours inspirants et les souvenirs qui continuent de faire vivre la communauté du CEG 2 Ouidah."
+        title="Mon Profil"
+        description="Consultez et mettez à jour vos informations personnelles, votre parcours académique et professionnel, ainsi que vos coordonnées afin de rester connecté à la communauté des anciens élèves du CEG 2 Ouidah."
         breadcrumbLinks={breadcrumbLinks}
       />
 
       <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.9fr]">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_0.9fr]">
           <section className="rounded-3xl border border-border bg-white p-8 shadow-service dark:border-dark_border dark:bg-darkmode/90">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -353,43 +331,50 @@ export default function ProfilePage() {
 
               <article className="rounded-2xl border border-border p-5 dark:border-dark_border">
                 <h2 className="text-lg font-semibold">Photo</h2>
-                <div className="mt-4 grid gap-4 md:grid-cols-[1fr_180px] items-start">
-                  <label className="grid gap-2 text-sm font-medium text-midnight_text dark:text-white">
-                    Télécharger une photo Cloudinary
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      disabled={uploadingImage}
-                      className="rounded-2xl border border-border bg-white px-4 py-3 text-sm dark:border-dark_border dark:bg-transparent dark:text-white"
+                <div className="mt-4">
+                  {editing ? (
+                    <ImageFileInput
+                      label="Photo de profil"
+                      value={draft?.photo || ""}
+                      onChange={(url) => {
+                        updateDraft("photo", url);
+                        if (url) showSuccess(AUTH_MESSAGES.imageUploaded);
+                      }}
+                      onError={(msg) => showError(msg)}
+                      hint="JPG, PNG ou WebP — max. 5 Mo. Enregistrez le profil après l’upload."
                     />
-                    <span className="text-xs text-grey dark:text-white/70">
-                      L’image sera envoyée vers Cloudinary et l’URL sera
-                      enregistrée dans votre profil.
-                    </span>
-                  </label>
-
-                  <div className="rounded-2xl border border-border p-3 text-center dark:border-dark_border">
-                    {draft?.photo ?
-                      <img
-                        src={draft.photo}
-                        alt="Photo de profil"
-                        className="h-32 w-full rounded-xl object-cover"
-                      />
-                    : <div className="flex h-32 items-center justify-center rounded-xl bg-slate-100 text-sm text-grey dark:bg-dark_border/40 dark:text-white/70">
-                        Aucune photo
+                  ) : (
+                    <div className="flex justify-center">
+                      <div className="h-36 w-36 overflow-hidden rounded-2xl border border-border bg-slate-100 dark:border-dark_border dark:bg-dark_border/40">
+                        {draft?.photo ? (
+                          <img
+                            src={draft.photo}
+                            alt="Photo de profil"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center px-4 text-center text-sm text-grey dark:text-white/60">
+                            Aucune photo — cliquez sur Modifier pour en ajouter une
+                          </div>
+                        )}
                       </div>
-                    }
-                  </div>
+                    </div>
+                  )}
                 </div>
               </article>
             </div>
           </section>
 
-          <aside className="space-y-6">
+          <aside className="space-y-6 w-full">
             <ProfileCompletionCard
               percent={profileCompletion}
-              onComplete={() => router.push("/onboarding?step=identity")}
+              onComplete={() => {
+                const step =
+                  ONBOARDING_STEPS[
+                    getOnboardingProgress(profile || {}).recommendedStep
+                  ]?.key ?? "identity";
+                router.push(`/onboarding?step=${step}`);
+              }}
             />
 
             <section className="rounded-3xl border border-border bg-white p-6 shadow-service dark:border-dark_border dark:bg-darkmode">
@@ -400,6 +385,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={async () => {
                   await signOut();
+                  showSuccess(AUTH_MESSAGES.logoutSuccess);
                   router.push("/");
                 }}
                 className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-red-500 px-5 py-3 text-sm font-semibold text-white hover:bg-red-600">

@@ -1,9 +1,14 @@
+"use client";
 /** @format */
 
 import React from "react";
 import Image from "next/image";
+import { useAuthProfile } from "@/app/context/AuthProfileContext";
 
 const Contactform = () => {
+  const { user } = useAuthProfile();
+  
+    if (!user ) return null;
   return (
     <section
       className="overflow-x-hidden bg-darkmode dark:bg-darklight"

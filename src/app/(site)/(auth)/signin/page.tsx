@@ -1,20 +1,23 @@
-import Signin from "@/components/Auth/SignIn";
-import Breadcrumb from "@/components/Common/Breadcrumb";
-import { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title:
-    "Sign In | Venus",
-};
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthModal } from "@/app/context/AuthModalContext";
+import SpinnerScreen from "@/components/Common/spinner/spinner-screen";
 
-const SigninPage = () => {
+/** Ouvre la même modale de connexion que le bouton du header */
+export default function SigninPage() {
+  const { openSignIn } = useAuthModal();
+  const router = useRouter();
+
+  useEffect(() => {
+    openSignIn();
+    router.replace("/");
+  }, [openSignIn, router]);
+
   return (
-    <>
-      <Breadcrumb pageName="Sign In Page" />
-
-      <Signin />
-    </>
+    <main className="min-h-[50vh] flex items-center justify-center">
+      <SpinnerScreen />
+    </main>
   );
-};
-
-export default SigninPage;
+}

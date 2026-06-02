@@ -7,13 +7,12 @@ import Logo from './Logo'
 import HeaderLink from '../Header/Navigation/HeaderLink'
 import MobileHeaderLink from "../Header/Navigation/MobileHeaderLink";
 import { useTheme } from 'next-themes'
-import { Icon } from '@iconify/react/dist/iconify.js'
-import { SuccessfullLogin } from '@/components/Auth/AuthDialog/SuccessfulLogin'
-import { FailedLogin } from '@/components/Auth/AuthDialog/FailedLogin'
-import { UserRegistered } from '@/components/Auth/AuthDialog/UserRegistered'
+// import { Icon } from '@iconify/react/dist/iconify.js'
+import { AuthFeedback } from '@/components/Auth/AuthDialog/AuthFeedback'
 import AuthDialogContext from '@/app/context/AuthDialogContext'
 import { useAuthProfile } from '@/app/context/AuthProfileContext'
 import { useAuthModal } from "@/app/context/AuthModalContext";
+import { useIsAdmin } from '@/hooks/useAdminApi';
 import ProfileCompletionBanner from '@/components/Auth/ProfileCompletionBanner'
 
 const Header: React.FC = () => {
@@ -21,6 +20,7 @@ const Header: React.FC = () => {
   const { theme, setTheme } = useTheme()
 
   const [navbarOpen, setNavbarOpen] = useState(false)
+  const [closed, setClosed] = useState(false);
   const [sticky, setSticky] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
@@ -56,8 +56,9 @@ const Header: React.FC = () => {
   }, [navbarOpen])
 
   const authDialog = useContext(AuthDialogContext)
-  const { user } = useAuthProfile()
+  const { user, profile } = useAuthProfile()
   const { openSignIn, openSignUp } = useAuthModal();
+  const isAdmin = useIsAdmin(profile);
 
   return (
     <header
@@ -112,12 +113,21 @@ const Header: React.FC = () => {
               </button>
             </>
           ) : (
-            <Link
-              href="/profile"
-              className="hidden lg:block bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Accéder à mon profil
-            </Link>
+            <>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="hidden lg:block border border-slate-300 text-midnight_text dark:text-white px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-dark_border text-sm">
+                  Backoffice
+                </Link>
+              )}
+              <Link
+                href="/profile"
+                className="hidden lg:block bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Mon profil
+              </Link>
+            </>
           )}
           <button
             onClick={() => setNavbarOpen(!navbarOpen)}
@@ -201,27 +211,14 @@ const Header: React.FC = () => {
           </div>
         </nav>
       </div>
-      {/* Successsful Login Alert */}
-      <div
-        className={`fixed top-6 end-1/2 translate-x-1/2 z-50 ${
-          authDialog?.isSuccessDialogOpen == true ? "block" : "hidden"
-        }`}>
-        <SuccessfullLogin />
-      </div>
-      {/* Failed Login Alert */}
-      <div
-        className={`fixed top-6 end-1/2 translate-x-1/2 z-50 ${
-          authDialog?.isFailedDialogOpen == true ? "block" : "hidden"
-        }`}>
-        <FailedLogin />
-      </div>
-      {/* User registration Alert */}
-      <div
-        className={`fixed top-6 end-1/2 translate-x-1/2 z-50 ${
-          authDialog?.isUserRegistered == true ? "block" : "hidden"
-        }`}>
-        <UserRegistered />
-      </div>
+      {authDialog?.feedback.open && (
+        <div className="fixed top-6 start-1/2 z-[60] w-full max-w-md -translate-x-1/2 px-4">
+          <AuthFeedback
+            type={authDialog.feedback.type}
+            message={authDialog.feedback.message}
+          />
+        </div>
+      )}
     </header>
   );
 }

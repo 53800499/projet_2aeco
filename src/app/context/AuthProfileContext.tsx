@@ -1,8 +1,10 @@
 "use client";
 
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { getProfileCompletion, ProfileRecord, useSupabaseProfile } from "@/hooks/useSupabaseProfile";
+import { getProfileCompletion, ProfileRecord, withProfileCompletion } from "@/lib/profile";
+import { useSupabaseProfile } from "@/hooks/useSupabaseProfile";
 import { getSupabaseBrowserClient, hasSupabaseConfig } from "@/lib/supabase";
+import { formatAuthError } from "@/lib/auth-messages";
 
 interface AuthProfileContextType {
   user: any | null;
@@ -12,7 +14,7 @@ interface AuthProfileContextType {
   signIn: (input: { email: string; password: string }) => Promise<any>;
   signUp: (input: { email: string; password: string; full_name: string; phone?: string; promo?: string }) => Promise<any>;
   signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
+  refreshSession: () => Promise<any | null>;
   loadProfile: (userId?: string) => Promise<any>;
   saveProfile: (profile: ProfileRecord) => Promise<any>;
   profileCompletion: number;
@@ -34,9 +36,9 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
 
     const { data } = await loadProfileFromHook(currentUser.id);
     if (data) {
-      setProfile(data);
+      setProfile(withProfileCompletion(data));
     } else {
-      setProfile({ id: currentUser.id, email: currentUser.email });
+      setProfile(withProfileCompletion({ id: currentUser.id, email: currentUser.email }));
     }
   }, [loadProfileFromHook]);
 
@@ -45,7 +47,7 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
       setUser(null);
       setProfile(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     setLoading(true);
@@ -55,12 +57,13 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
       setUser(null);
       setProfile(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     setUser(data.session.user);
     await syncProfile(data.session.user);
     setLoading(false);
+    return data.session.user;
   }, [supabase, syncProfile]);
 
   useEffect(() => {
@@ -75,9 +78,10 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) {
-      setError(signInError.message);
+      const message = formatAuthError(signInError);
+      setError(message);
       setLoading(false);
-      throw signInError;
+      throw new Error(message);
     }
 
     setUser(data.user);
@@ -96,40 +100,67 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
       ? `${window.location.origin}/onboarding?step=identity`
       : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/onboarding?step=identity`; */
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        // emailRedirectTo: redirectTo,
         data: { full_name, phone: phone || "", promo: promo || "" },
       },
     });
 
     if (signUpError) {
-      setError(signUpError.message);
+      const message = formatAuthError(signUpError);
+      setError(message);
       setLoading(false);
-      throw signUpError;
+      throw new Error(message);
     }
 
-    if (data.user) {
-      await supabase.from("users").upsert({
-        id: data.user.id,
+    let session = signUpData.session;
+    let activeUser = signUpData.user;
+
+    // Connexion immédiate si la confirmation email est désactivée dans Supabase
+    if (activeUser && !session) {
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        full_name,
-        first_name: full_name.split(" ")[0] || "",
-        last_name: full_name.split(" ").slice(1).join(" ") || "",
-        phone: phone || "",
-        promo: promo || "",
-        onboarding_completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "id" });
-      setUser(data.user);
-      await syncProfile(data.user);
+        password,
+      });
+
+      if (!signInError && signInData.session) {
+        session = signInData.session;
+        activeUser = signInData.user;
+      }
+    }
+
+    if (activeUser && session) {
+      const { error: profileError } = await supabase.from("users").upsert(
+        {
+          id: activeUser.id,
+          email,
+          full_name,
+          first_name: full_name.split(" ")[0] || "",
+          last_name: full_name.split(" ").slice(1).join(" ") || "",
+          phone: phone || "",
+          promo: promo || "",
+          onboarding_completed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
+      if (profileError) {
+        const message = formatAuthError(profileError, "Impossible d’enregistrer votre profil.");
+        setError(message);
+        setLoading(false);
+        throw new Error(message);
+      }
+
+      setUser(activeUser);
+      await syncProfile(activeUser);
     }
 
     setLoading(false);
-    return data;
+    return { ...signUpData, user: activeUser, session };
   }, [supabase, syncProfile]);
 
   const signOut = useCallback(async () => {
@@ -145,11 +176,11 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
 
   const saveProfile = useCallback(async (nextProfile: ProfileRecord) => {
     const { data } = await saveProfileFromHook(nextProfile);
-    setProfile(data || nextProfile);
+    setProfile(withProfileCompletion(data || nextProfile));
     return { data };
   }, [saveProfileFromHook]);
 
-  const profileCompletion = useMemo(() => getProfileCompletion(profile || {}), [profile]);
+  const profileCompletion = profile?.profile_completion ?? getProfileCompletion(profile || {});
 
   return (
     <AuthProfileContext.Provider value={{

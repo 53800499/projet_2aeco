@@ -2,57 +2,49 @@
 
 "use client";
 import Link from "next/link";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import Logo from "@/components/Layout/Header/Logo";
-import AuthDialogContext from "@/app/context/AuthDialogContext";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
 import { useAuthModal } from "@/app/context/AuthModalContext";
+import { useAuthFeedback } from "@/hooks/useAuthFeedback";
+import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
 import Loader from "@/components/Common/Loader";
 
-const Signin = ({ signInOpen }: { signInOpen?: any }) => {
+const Signin = ({ signInOpen }: { signInOpen?: (open: boolean) => void }) => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const authDialog = useContext(AuthDialogContext);
   const { signIn } = useAuthProfile();
-  const { openSignUp } = useAuthModal();
+  const { openSignUp, closeSignIn } = useAuthModal();
+  const { showSuccess, showError } = useAuthFeedback();
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
       const result = await signIn({
-        email: identifier,
+        email: identifier.trim(),
         password,
       });
 
-      if (!result.session) {
-        setError("Informations incorrectes");
-        authDialog?.setIsFailedDialogOpen(true);
-        setTimeout(() => {
-          authDialog?.setIsFailedDialogOpen(false);
-        }, 1100);
+      if (!result?.session) {
+        const msg = AUTH_MESSAGES.loginFailed;
+        setError(msg);
+        showError(msg);
         return;
       }
-      setTimeout(() => {
-        signInOpen(false);
-      }, 1200);
 
-      authDialog?.setIsSuccessDialogOpen(true);
-
-      setTimeout(() => {
-        authDialog?.setIsSuccessDialogOpen(false);
-      }, 1100);
-    } catch (err) {
-      setError("Informations incorrectes");
-      authDialog?.setIsFailedDialogOpen(true);
-      setTimeout(() => {
-        authDialog?.setIsFailedDialogOpen(false);
-      }, 1100);
+      signInOpen?.(false);
+      closeSignIn();
+      showSuccess(AUTH_MESSAGES.loginSuccess);
+    } catch (err: unknown) {
+      const msg = formatAuthError(err, AUTH_MESSAGES.loginFailed);
+      setError(msg);
+      showError(msg);
     } finally {
       setLoading(false);
     }
@@ -60,15 +52,12 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
 
   return (
     <>
-      {/* LOGO */}
       <div className="mb-6 text-center mx-auto inline-block max-w-[180px]">
         <Logo logoColor="/images/logo/Logo.png" />
       </div>
 
-      {/* TITRE */}
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold dark:text-white">Bon retour 👋</h2>
-
         <p className="text-gray dark:text-white/60 mt-3">
           Connectez-vous pour retrouver vos anciens camarades, consulter les
           promotions et rejoindre la communauté des anciens élèves du CEG 2
@@ -76,9 +65,7 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
         </p>
       </div>
 
-      {/* FORM */}
       <form onSubmit={handleSubmit}>
-        {/* EMAIL / PHONE */}
         <div className="mb-5">
           <input
             type="text"
@@ -90,7 +77,6 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
           />
         </div>
 
-        {/* PASSWORD */}
         <div className="mb-3">
           <input
             type="password"
@@ -102,10 +88,12 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
           />
         </div>
 
-        {/* ERROR */}
-        {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+        {error && (
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+            {error}
+          </div>
+        )}
 
-        {/* FORGET PASSWORD */}
         <div className="mb-6 text-right">
           <Link
             href="/forgot-password"
@@ -114,7 +102,6 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
           </Link>
         </div>
 
-        {/* BUTTON */}
         <button
           type="submit"
           disabled={loading}
@@ -124,16 +111,15 @@ const Signin = ({ signInOpen }: { signInOpen?: any }) => {
         </button>
       </form>
 
-      {/* REGISTER */}
       <div className="mt-8 text-center">
         <p className="text-base dark:text-white/70">
           Vous n’êtes pas encore inscrit ?
         </p>
-
         <button
           type="button"
           onClick={() => {
             signInOpen?.(false);
+            closeSignIn();
             openSignUp();
           }}
           className="text-primary font-medium hover:underline">
