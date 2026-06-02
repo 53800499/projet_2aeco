@@ -1,9 +1,39 @@
-import React from 'react'
+"use client"
+import React, { useEffect, useState } from 'react'
 import BlogCard from '@/components/SharedComponent/Blog/blogCard'
-import { getAllPosts } from '@/utils/markdown'
+import { Blog } from '@/types/blog'
+
+type ApiBlog = {
+  id: string
+  title: string
+  slug: string
+  excerpt: string | null
+  cover_image: string | null
+  published_at: string | null
+  created_at: string
+}
 
 const BlogList: React.FC = () => {
-  const posts = getAllPosts(['title', 'date', 'excerpt', 'coverImage', 'slug'])
+  const [posts, setPosts] = useState<Blog[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch('/api/blogs')
+      const data = await res.json()
+      if (!res.ok) return
+      setPosts(
+        ((data.blogs || []) as ApiBlog[]).map((b) => ({
+          id: b.id,
+          title: b.title,
+          slug: b.slug,
+          excerpt: b.excerpt,
+          coverImage: b.cover_image,
+          date: b.published_at || b.created_at,
+        }))
+      )
+    }
+    void load()
+  }, [])
 
   return (
     <section

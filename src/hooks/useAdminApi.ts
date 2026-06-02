@@ -5,6 +5,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase";
 import { ProfileRecord } from "@/lib/profile";
 import { AdminDashboardStats, AdminUserRow, UserListStatus } from "@/lib/admin-users";
 import { PlaquetteMember } from "@/lib/plaquette";
+import { BlogPost } from "@/lib/blogs";
 
 const getAccessToken = async () => {
   const supabase = getSupabaseBrowserClient();
@@ -108,6 +109,37 @@ export const useAdminApi = () => {
     []
   );
 
+  const fetchBlogs = useCallback(
+    () => adminFetch<{ blogs: BlogPost[] }>("/api/admin/blogs"),
+    []
+  );
+
+  const createBlog = useCallback(
+    (input: Partial<BlogPost>) =>
+      adminFetch<{ blog: BlogPost }>("/api/admin/blogs", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    []
+  );
+
+  const updateBlog = useCallback(
+    (id: string, input: Partial<BlogPost>) =>
+      adminFetch<{ blog: BlogPost }>(`/api/admin/blogs/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(input),
+      }),
+    []
+  );
+
+  const deleteBlog = useCallback(
+    (id: string) =>
+      adminFetch<{ success: boolean }>(`/api/admin/blogs/${id}`, {
+        method: "DELETE",
+      }),
+    []
+  );
+
   return {
     fetchStats,
     fetchUsers,
@@ -116,6 +148,10 @@ export const useAdminApi = () => {
     updateUser,
     softDeleteUser,
     restoreUser,
+    fetchBlogs,
+    createBlog,
+    updateBlog,
+    deleteBlog,
   };
 };
 
@@ -131,4 +167,4 @@ export const useIsAdmin = (profile: { role?: string; email?: string } | null) =>
   return false;
 };
 
-export type { PlaquetteMember, AdminDashboardStats, AdminUserRow, UserListStatus };
+export type { PlaquetteMember, AdminDashboardStats, AdminUserRow, UserListStatus, BlogPost };

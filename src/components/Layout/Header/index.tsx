@@ -68,7 +68,9 @@ const Header: React.FC = () => {
         : "shadow-none"
       }`}>
       <div className="container mx-auto max-w-6xl flex items-center justify-between p-6">
+        <Link href="/">
         <Logo logoColor="/images/logo/logo.png" />
+        </Link>
         <nav className="hidden lg:flex grow items-center justify-center gap-6">
           {headerData.map((item, index) => (
             <HeaderLink key={index} item={item} />

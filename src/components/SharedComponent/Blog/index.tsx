@@ -1,19 +1,44 @@
 /** @format */
+"use client";
 
 import React from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 import BlogCard from "./blogCard";
-import { getAllPosts } from "@/utils/markdown";
+import type { Blog } from "@/types/blog";
+
+type ApiBlog = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  cover_image: string | null;
+  published_at: string | null;
+  created_at: string;
+};
 
 const Blog: React.FC = () => {
-  const posts = getAllPosts([
-    "title",
-    "date",
-    "excerpt",
-    "coverImage",
-    "slug"
-  ]).slice(0, 3);
+  const [posts, setPosts] = useState<Blog[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch("/api/blogs?limit=3");
+      const data = await res.json();
+      if (!res.ok) return;
+      setPosts(
+        ((data.blogs || []) as ApiBlog[]).map((b) => ({
+          id: b.id,
+          title: b.title,
+          slug: b.slug,
+          excerpt: b.excerpt,
+          coverImage: b.cover_image,
+          date: b.published_at || b.created_at,
+        }))
+      );
+    };
+    void load();
+  }, []);
 
   return (
     <section
@@ -31,7 +56,7 @@ const Blog: React.FC = () => {
           </h2>
 
           <Link
-            href="/news"
+            href="/blog"
             className="flex items-center gap-3 text-base text-midnight_text dark:text-white dark:hover:text-primary font-medium hover:text-primary sm:pb-0 pb-3"
             data-aos="fade-left"
             data-aos-delay="200"

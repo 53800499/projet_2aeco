@@ -1,20 +1,28 @@
 'use client'
-import React from 'react'
-import SlickSlider from '@/components/portfolio/Slider'
-import Testimonial from '@/components/SharedComponent/Testimonial'
-import PortfolioDetail from '@/components/portfolio/PortfolioDetail'
+import React, { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Portfolio from '@/components/SharedComponent/portfollio'
-import { portfolioinfo } from '@/app/api/data'
+import { PlaquetteMember, getMemberDisplayName } from '@/lib/plaquette'
 import { useParams } from 'next/navigation'
+import SpinnerScreen from '@/components/Common/spinner/spinner-screen'
 
 const Portfolios = () => {
   const { slug } = useParams()
+  const [item, setItem] = useState<PlaquetteMember | null>(null)
 
-  // Find the blog post by slug
-  const item = portfolioinfo.find((item) => item.slug === slug)
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch('/api/plaquette/members')
+      const data = await res.json()
+      if (!res.ok) return
+      const found = (data.members || []).find((m: PlaquetteMember) => m.id === slug)
+      setItem(found || null)
+    }
+    void load()
+  }, [slug])
 
   if (!item) {
-    return <div>Loading...</div>
+    return <div> <SpinnerScreen /></div>
   }
   return (
     <>
@@ -26,7 +34,7 @@ const Portfolios = () => {
               data-aos='fade-right'
               data-aos-delay='200'
               data-aos-duration='1000'>
-              {item.title}
+              {getMemberDisplayName(item)}
             </h2>
             <div className='pb-[3.6875rem]'>
               <p
@@ -34,18 +42,32 @@ const Portfolios = () => {
                 data-aos='fade-Up'
                 data-aos-delay='300'
                 data-aos-duration='1000'>
-                We are a dedicated team of passionate product managers, full
-                stack developers, UX/UI designers, QA engineers and marketing.
+                {item.profession || item.fonction_actuelle || 'Membre actif de la communaute alumni.'}
               </p>
             </div>
           </div>
-          <SlickSlider />
+          <div className='max-w-3xl'>
+            <Image
+              src={item.photo || '/images/alumni/antoine.jpg'}
+              alt={getMemberDisplayName(item)}
+              width={1200}
+              height={800}
+              className='rounded-lg'
+            />
+          </div>
         </div>
       </section>
-      <PortfolioDetail />
-      <div className='border-b border-primary border-opacity-30'>
-        <Testimonial />
-      </div>
+      <section className='md:pb-24 pb-16 dark:bg-darkmode'>
+        <div className='container mx-auto max-w-6xl'>
+          <div className='rounded-2xl border border-slate-200 p-6 dark:border-dark_border'>
+            <h3 className='text-2xl font-semibold text-midnight_text dark:text-white'>Profil</h3>
+            <p className='mt-3 text-secondary dark:text-white/70'>Nom: {getMemberDisplayName(item)}</p>
+            <p className='mt-2 text-secondary dark:text-white/70'>Promotion: {item.promo || 'Non renseignee'}</p>
+            <p className='mt-2 text-secondary dark:text-white/70'>Ville: {item.ville_residence || '-'}</p>
+            <p className='mt-2 text-secondary dark:text-white/70'>Pays: {item.pays_residence || '-'}</p>
+          </div>
+        </div>
+      </section>
       <Portfolio />
     </>
   )

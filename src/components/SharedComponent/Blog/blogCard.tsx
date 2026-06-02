@@ -2,7 +2,6 @@
 
 import React from "react";
 import Image from "next/image";
-import { format } from "date-fns";
 import Link from "next/link";
 import { Blog } from "@/types/blog";
 
@@ -14,12 +13,12 @@ const BlogCard = ({ blog }: { blog: Blog }) => {
       {/* IMAGE */}
       <div className="mb-6 overflow-hidden rounded-sm">
         <Link
-          href={`/alumni/${slug}`}
-          aria-label="alumni profile"
+          href={`/blog/${slug}`}
+          aria-label="article"
           className="block">
           <Image
-            src={coverImage!}
-            alt="ancien élève CEG 2 Ouidah"
+            src={coverImage || "/images/blog/blog_1.png"}
+            alt={title || "article"}
             className="w-full transition group-hover:scale-105"
             width={408}
             height={272}
@@ -34,7 +33,7 @@ const BlogCard = ({ blog }: { blog: Blog }) => {
         {/* NOM */}
         <h3>
           <Link
-            href={`/alumni/${slug}`}
+            href={`/blog/${slug}`}
             className="mb-3 inline-block font-semibold text-black dark:text-white hover:text-primary text-[22px] leading-tight">
             {title}
           </Link>
@@ -44,9 +43,7 @@ const BlogCard = ({ blog }: { blog: Blog }) => {
         <p className="text-sm text-gray dark:text-white/60 mb-2">{excerpt}</p>
 
         {/* DATE / PROMOTION */}
-        <span className="text-sm font-semibold leading-loose text-SereneGray">
-          Promotion {format(new Date(date), "yyyy")}
-        </span>
+        {date && <span className="text-sm font-semibold leading-loose text-SereneGray">{new Date(date).toLocaleDateString("fr-FR")}</span>}
       </div>
     </div>
   );

@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/admin", label: "Tableau de bord", icon: "📊" },
   { href: "/admin/users", label: "Utilisateurs", icon: "👥" },
+  { href: "/admin/blogs", label: "Blogs", icon: "📝" },
   { href: "/admin/plaquette", label: "Plaquette", icon: "📖" },
 ];
 
