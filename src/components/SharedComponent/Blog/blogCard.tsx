@@ -11,18 +11,16 @@ const BlogCard = ({ blog }: { blog: Blog }) => {
   return (
     <div className="group relative">
       {/* IMAGE */}
-      <div className="mb-6 overflow-hidden rounded-sm">
+      <div className="mb-6 overflow-hidden rounded-sm aspect-[4/4] relative">
         <Link
           href={`/blog/${slug}`}
           aria-label="article"
-          className="block">
+          className="block h-full w-full">
           <Image
             src={coverImage || "/images/blog/blog_1.png"}
             alt={title || "article"}
-            className="w-full transition group-hover:scale-105"
-            width={408}
-            height={272}
-            style={{ width: "100%", height: "auto" }}
+            fill
+            className="object-cover transition group-hover:scale-105"
             quality={100}
           />
         </Link>
@@ -34,16 +32,21 @@ const BlogCard = ({ blog }: { blog: Blog }) => {
         <h3>
           <Link
             href={`/blog/${slug}`}
-            className="mb-3 inline-block font-semibold text-black dark:text-white hover:text-primary text-[22px] leading-tight">
+            className="mb-3 inline-block font-semibold text-black dark:text-white hover:text-primary text-[22px] leading-tight line-clamp-2">
             {title}
           </Link>
         </h3>
 
         {/* EXCERPT / PARCOURS */}
-        <p className="text-sm text-gray dark:text-white/60 mb-2">{excerpt}</p>
-
+        <p className="text-sm text-gray dark:text-white/60 mb-2 line-clamp-3">
+          {excerpt}
+        </p>
         {/* DATE / PROMOTION */}
-        {date && <span className="text-sm font-semibold leading-loose text-SereneGray">{new Date(date).toLocaleDateString("fr-FR")}</span>}
+        {date && (
+          <span className="text-sm font-semibold leading-loose text-SereneGray">
+            {new Date(date).toLocaleDateString("fr-FR")}
+          </span>
+        )}
       </div>
     </div>
   );
