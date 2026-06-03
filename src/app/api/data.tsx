@@ -1,3 +1,4 @@
+
 export const menuItems = [
   { name: "Home", href: "#home" },
   { name: "About", href: "#about" },
@@ -55,25 +56,32 @@ export const Progress = [
   { title: "Profils validés", Progress: 30 }
 ];
 
+/** Objectifs officiels de l’Association des anciens élèves du CEG2 de Ouidah. */
+export const associationObjectives = {
+  intro: "L’Association a pour objectif de :",
+  items: [
+    "Créer un cadre de retrouvailles des anciens élèves ;",
+    "Œuvrer pour l’excellence et l’épanouissement des nouveaux élèves du Collège d’Enseignement Général 2 de Ouidah ;",
+    "Promouvoir l’entraide et la solidarité entre les Anciens Elèves du CEG2 de Ouidah.",
+  ],
+};
+
 export const Servicebox = [
   {
     icon: "/images/services/ux-design-product_1.svg",
-    title: "Réseau des anciens élèves",
-    description:
-      "Retrouvez et connectez-vous avec les anciens élèves du CEG 2 de Ouidah à travers les différentes promotions."
+    title: "Retrouvailles",
+    description: associationObjectives.items[0],
   },
   {
     icon: "/images/services/perfomance-optimization.svg",
-    title: "Recherche intelligente",
-    description:
-      "Recherchez facilement un ancien élève par nom, promotion, ville ou domaine professionnel."
+    title: "Excellence & épanouissement",
+    description: associationObjectives.items[1],
   },
   {
     icon: "/images/services/ux-design-product_2.svg",
-    title: "Profils détaillés",
-    description:
-      "Chaque membre dispose d’un profil complet avec parcours scolaire, profession et informations de contact."
-  }
+    title: "Entraide & solidarité",
+    description: associationObjectives.items[2],
+  },
 ];
 export const portfolioinfo = [
   {

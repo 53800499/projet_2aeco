@@ -7,13 +7,13 @@ type LogoProps = {
   logoColor: string;
 };
 
-export default function Logo({ logoColor }: LogoProps) {
+export default function Logo() {
   return (
     <div className="flex items-center gap-2">
       {/* Logo SVG */}
       <div className="relative flex items-center justify-center">
         <Image
-          src={logoColor}
+          src="/images/logo/Logo1.png"
           alt="2aeco Logo"
           width={52}
           height={52}
@@ -21,22 +21,6 @@ export default function Logo({ logoColor }: LogoProps) {
           className="object-contain"
         />
       </div>
-
-      {/* Brand Name */}
-      <span
-        className="
-          text-3xl
-          font-semibold
-          tracking-tight
-          text-[#2F73F2]
-          leading-none
-          select-none
-        "
-        style={{
-          fontFamily: "'Poppins', sans-serif"
-        }}>
-        2aeco
-      </span>
     </div>
   );
 }

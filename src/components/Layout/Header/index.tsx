@@ -69,7 +69,7 @@ const Header: React.FC = () => {
       }`}>
       <div className="container mx-auto max-w-6xl flex items-center justify-between p-6">
         <Link href="/">
-        <Logo logoColor="/images/logo/Logo.png" />
+        <Logo />
         </Link>
         <nav className="hidden lg:flex grow items-center justify-center gap-6">
           {headerData.map((item, index) => (
@@ -103,13 +103,13 @@ const Header: React.FC = () => {
             <>
               <button
                 type="button"
-                className="hidden lg:block bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white"
+                className="hidden lg:block bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-green-600 hover:text-white"
                 onClick={openSignIn}>
                 Connectez-vous
               </button>
               <button
                 type="button"
-                className="hidden lg:block bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                className="hidden lg:block bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-700"
                 onClick={openSignUp}>
                 Rejoindre le répertoire
               </button>
@@ -125,7 +125,7 @@ const Header: React.FC = () => {
               )}
               <Link
                 href="/profile"
-                className="hidden lg:block bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                className="hidden lg:block bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-700"
               >
                 Mon profil
               </Link>
@@ -184,7 +184,7 @@ const Header: React.FC = () => {
               <>
                 <button
                   type="button"
-                  className="bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-blue-600 hover:text-white"
+                  className="bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-green-600 hover:text-white"
                   onClick={() => {
                     openSignIn();
                     setNavbarOpen(false);
@@ -193,7 +193,7 @@ const Header: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                  className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-700"
                   onClick={() => {
                     openSignUp();
                     setNavbarOpen(false);
@@ -204,7 +204,7 @@ const Header: React.FC = () => {
             ) : (
               <Link
                 href="/profile"
-                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-green-700"
                 onClick={() => setNavbarOpen(false)}
               >
                 Accéder à mon profil

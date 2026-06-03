@@ -16,7 +16,7 @@ export default function Spinner({
   const sizeStyles =
     size === "small" ? "w-5 h-5" : size === "large" ? "w-12 h-12" : "w-9 h-9";
 
-  const variantStyles = variant === "white" ? "text-white" : "text-[#1F60D0]";
+  const variantStyles = variant === "white" ? "text-white" : "text-[#1D7815]";
 
   return (
     <svg

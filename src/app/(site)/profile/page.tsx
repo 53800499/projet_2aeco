@@ -2,17 +2,32 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
 import { useAuthFeedback } from "@/hooks/useAuthFeedback";
 import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
 import ProfileCompletionCard from "@/components/Auth/ProfileCompletionCard";
+import ProfileMissingFieldsAlert from "@/components/Auth/ProfileMissingFieldsAlert";
 import { ProfileRecord } from "@/hooks/useSupabaseProfile";
 import { useRouter } from "next/navigation";
 import HeroSub from "@/components/SharedComponent/HeroSub";
 import SpinnerScreen from "@/components/Common/spinner/spinner-screen";
 import ImageFileInput from "@/components/Common/ImageFileInput";
-import { getOnboardingProgress, ONBOARDING_STEPS } from "@/lib/onboarding";
+import {
+  COTISATION_SITUATION_OPTIONS,
+  getMissingProfileFields,
+  MEMBER_STATUS_OPTIONS,
+  PROFILE_FIELD_LABELS,
+  ProfileCompletionFieldKey,
+} from "@/lib/profile";
+
+const buildDraftFromProfile = (
+  profile: ProfileRecord,
+  email?: string | null
+): ProfileRecord => ({
+  ...profile,
+  email: profile.email || email || "",
+});
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -24,49 +39,45 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const breadcrumbLinks = [
     { href: "/", text: "Accueil" },
-    { href: "/profile", text: "Profil" }
+    { href: "/profile", text: "Profil" },
   ];
 
   useEffect(() => {
-    if (profile) {
-      setDraft({ ...profile, email: profile.email || user?.email || "" });
+    if (profile && !editing) {
+      setDraft(buildDraftFromProfile(profile, user?.email));
     }
-  }, [profile, user]);
+  }, [profile, user?.email, editing]);
 
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
-        <SpinnerScreen />
-      </main>
-    );
-  }
+  useEffect(() => {
+    if (!editing) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [editing]);
 
-  if (!user) {
-      return (
-        <>
-          <HeroSub
-            title="Mon Profil"
-            description="Consultez et mettez à jour vos informations personnelles, votre parcours académique et professionnel, ainsi que vos coordonnées afin de rester connecté à la communauté des anciens élèves du CEG 2 Ouidah."
-            breadcrumbLinks={breadcrumbLinks}
-          />
-          <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
-            <div className="mx-auto max-w-3xl rounded-3xl border border-border bg-white p-8 shadow-service dark:border-dark_border dark:bg-darkmode/90">
-              <h1 className="text-3xl font-semibold">Connexion requise</h1>
-              <p className="mt-3 text-grey dark:text-white/70">
-                Veuillez vous connecter pour afficher votre profil.
-              </p>
-            </div>
-          </main>
-        </>
-      );
-  }
+  const startEditing = useCallback(() => {
+    if (profile) {
+      setDraft(buildDraftFromProfile(profile, user?.email));
+    }
+    setEditing(true);
+  }, [profile, user?.email]);
+
+  const cancelEditing = useCallback(() => {
+    if (profile) {
+      setDraft(buildDraftFromProfile(profile, user?.email));
+    }
+    setEditing(false);
+  }, [profile, user?.email]);
 
   const updateDraft = (field: keyof ProfileRecord, value: string) => {
+    if (!editing) return;
     setDraft((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
   const handleSave = async () => {
-    if (!draft || !user?.id) return;
+    if (!draft || !user?.id || !editing) return;
     setSaving(true);
     try {
       await saveProfile({
@@ -83,27 +94,155 @@ export default function ProfilePage() {
     }
   };
 
-  const renderField = (
-    label: string,
-    value: string | undefined,
-    field: keyof ProfileRecord,
-    type = "text"
-  ) => (
-    <label className="grid gap-1 text-sm font-medium text-midnight_text dark:text-white">
-      {label}
-      {editing ?
-        <input
-          type={type}
-          value={String(draft?.[field] ?? "")}
-          onChange={(event) => updateDraft(field, event.target.value)}
-          className="rounded-2xl border border-border bg-white px-4 py-3 text-sm dark:border-dark_border dark:bg-transparent dark:text-white"
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
+        <SpinnerScreen />
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <>
+        <HeroSub
+          title="Mon Profil"
+          description="Consultez et mettez à jour vos informations personnelles, votre parcours académique et professionnel, ainsi que vos coordonnées afin de rester connecté à la communauté des anciens élèves du CEG 2 Ouidah."
+          breadcrumbLinks={breadcrumbLinks}
         />
-      : <span className="rounded-2xl border border-border bg-slate-50 px-4 py-3 text-sm text-grey dark:border-dark_border dark:bg-dark_border/30 dark:text-white/80">
-          {value || "—"}
-        </span>
-      }
-    </label>
+        <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
+          <div className="mx-auto max-w-3xl rounded-3xl border border-border bg-white p-8 shadow-service dark:border-dark_border dark:bg-darkmode/90">
+            <h1 className="text-3xl font-semibold">Connexion requise</h1>
+            <p className="mt-3 text-grey dark:text-white/70">
+              Veuillez vous connecter pour afficher votre profil.
+            </p>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const view = editing ? draft : profile;
+  const missingKeys = new Set(
+    getMissingProfileFields(view || {}).map((m) => m.key)
   );
+
+  const fieldHighlight = (field: ProfileCompletionFieldKey) =>
+    missingKeys.has(field)
+      ? "ring-2 ring-amber-400 border-amber-400 dark:ring-amber-500"
+      : "";
+
+  const readOnlyBoxClass = (field: ProfileCompletionFieldKey) =>
+    `rounded-2xl border border-border bg-slate-50 px-4 py-3 text-sm text-grey dark:border-dark_border dark:bg-dark_border/30 dark:text-white/80 min-h-[46px] ${fieldHighlight(field)}`;
+
+  const inputClass = (field: ProfileCompletionFieldKey) =>
+    `rounded-2xl border border-border bg-white px-4 py-3 text-sm dark:border-dark_border dark:bg-transparent dark:text-white w-full ${fieldHighlight(field)}`;
+
+  const renderLabel = (field: ProfileCompletionFieldKey, label?: string) => (
+    <span className="flex items-center gap-2">
+      {label ?? PROFILE_FIELD_LABELS[field]}
+      {missingKeys.has(field) && (
+        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+          À compléter
+        </span>
+      )}
+    </span>
+  );
+
+  const renderField = (
+    field: ProfileCompletionFieldKey | keyof ProfileRecord,
+    type = "text",
+    label?: string
+  ) => {
+    const key = field as keyof ProfileRecord;
+    const value = view?.[key];
+    const display = String(value ?? "").trim();
+
+    return (
+      <label
+        id={`field-${key}`}
+        className="grid gap-1 text-sm font-medium text-midnight_text dark:text-white scroll-mt-28"
+      >
+        {renderLabel(key as ProfileCompletionFieldKey, label)}
+        {editing ? (
+          <input
+            type={type}
+            value={String(draft?.[key] ?? "")}
+            onChange={(e) => updateDraft(key, e.target.value)}
+            disabled={saving}
+            className={inputClass(key as ProfileCompletionFieldKey)}
+          />
+        ) : (
+          <div className={readOnlyBoxClass(key as ProfileCompletionFieldKey)}>
+            {display || "—"}
+          </div>
+        )}
+      </label>
+    );
+  };
+
+  const renderTextarea = (field: ProfileCompletionFieldKey, rows = 3) => {
+    const value = view?.[field];
+    const display = String(value ?? "").trim();
+
+    return (
+      <label
+        id={`field-${field}`}
+        className="grid gap-1 text-sm font-medium text-midnight_text dark:text-white scroll-mt-28 md:col-span-2"
+      >
+        {renderLabel(field)}
+        {editing ? (
+          <textarea
+            rows={rows}
+            value={String(draft?.[field] ?? "")}
+            onChange={(e) => updateDraft(field, e.target.value)}
+            disabled={saving}
+            className={inputClass(field)}
+          />
+        ) : (
+          <div
+            className={`${readOnlyBoxClass(field)} whitespace-pre-wrap`}
+          >
+            {display || "—"}
+          </div>
+        )}
+      </label>
+    );
+  };
+
+  const renderSelectField = (
+    field: "statut_membre" | "situation_cotisations",
+    options: readonly string[]
+  ) => {
+    const value = view?.[field];
+    const display = String(value ?? "").trim();
+
+    return (
+      <label
+        id={`field-${field}`}
+        className="grid gap-1 text-sm font-medium text-midnight_text dark:text-white scroll-mt-28"
+      >
+        {renderLabel(field)}
+        {editing ? (
+          <select
+            value={String(draft?.[field] ?? "")}
+            onChange={(e) => updateDraft(field, e.target.value)}
+            disabled={saving}
+            className={inputClass(field)}
+          >
+            <option value="">— Sélectionner —</option>
+            {options.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className={readOnlyBoxClass(field)}>{display || "—"}</div>
+        )}
+      </label>
+    );
+  };
 
   return (
     <>
@@ -113,170 +252,142 @@ export default function ProfilePage() {
         breadcrumbLinks={breadcrumbLinks}
       />
 
-      <main className="min-h-screen bg-section px-6 py-16 text-midnight_text dark:bg-darkmode dark:text-white">
+      <main className="min-h-screen bg-section px-6 py-16 pb-28 text-midnight_text dark:bg-darkmode dark:text-white">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_0.9fr]">
-          <section className="rounded-3xl border border-border bg-white p-8 shadow-service dark:border-dark_border dark:bg-darkmode/90">
+          <section
+            className={`rounded-3xl border bg-white p-8 shadow-service dark:bg-darkmode/90 ${
+              editing
+                ? "border-primary/40 ring-2 ring-primary/20"
+                : "border-border dark:border-dark_border"
+            }`}
+          >
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-sm uppercase tracking-[0.25em] text-primary">
-                  Mon profil
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm uppercase tracking-[0.25em] text-primary">
+                    Mon profil
+                  </p>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      editing
+                        ? "bg-primary/15 text-primary"
+                        : "bg-slate-100 text-grey dark:bg-dark_border dark:text-white/60"
+                    }`}
+                  >
+                    {editing ? "Mode édition" : "Mode consultation"}
+                  </span>
+                </div>
                 <h1 className="mt-3 text-3xl font-semibold">
                   Bonjour {profile?.full_name || user.email}
                 </h1>
                 <p className="mt-3 text-grey dark:text-white/70">
-                  Gérez votre identité, votre parcours scolaire, votre vie
-                  professionnelle et vos contacts depuis un seul espace.
+                  {editing
+                    ? "Modifiez vos informations puis cliquez sur Enregistrer pour les sauvegarder."
+                    : "Consultez votre fiche. Cliquez sur Modifier pour mettre à jour un champ."}
                 </p>
               </div>
-              {editing ?
-                <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
+                {editing ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      disabled={saving}
+                      className="rounded-full border border-border px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white disabled:opacity-70"
+                    >
+                      {saving ? "Enregistrement..." : "Enregistrer"}
+                    </button>
+                  </>
+                ) : (
                   <button
                     type="button"
-                    onClick={() => setEditing(false)}
-                    className="rounded-full border border-border px-4 py-2 text-sm font-semibold">
-                    Annuler
+                    onClick={startEditing}
+                    className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white"
+                  >
+                    Modifier
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white">
-                    {saving ? "Enregistrement..." : "Enregistrer"}
-                  </button>
-                </div>
-              : <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white">
-                  Modifier
-                </button>
-              }
+                )}
+              </div>
             </div>
 
-            <div className="mt-8 space-y-6">
+            {profileCompletion < 100 && !editing && (
+              <ProfileMissingFieldsAlert
+                profile={profile}
+                percent={profileCompletion}
+                className="mt-6"
+              />
+            )}
+
+            {editing && (
+              <p className="mt-4 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-midnight_text dark:text-white/90">
+                Les changements ne seront enregistrés qu’après avoir cliqué sur{" "}
+                <strong>Enregistrer</strong>. Annuler restaure vos données actuelles.
+              </p>
+            )}
+
+            <fieldset
+              disabled={!editing}
+              className="mt-8 space-y-6 disabled:opacity-100"
+            >
               <article className="rounded-2xl border border-border p-5 dark:border-dark_border">
                 <h2 className="text-lg font-semibold">Identité</h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {renderField("Nom complet", draft?.full_name, "full_name")}
-                  {renderField("Prénom", draft?.first_name, "first_name")}
-                  {renderField("Nom", draft?.last_name, "last_name")}
-                  {renderField("Sexe", draft?.sexe, "sexe")}
-                  {renderField(
-                    "Date de naissance",
-                    draft?.date_naissance,
-                    "date_naissance",
-                    "date"
-                  )}
-                  {renderField(
-                    "Nationalité",
-                    draft?.nationalite,
-                    "nationalite"
-                  )}
-                  {renderField("Email", draft?.email, "email", "email")}
-                  {renderField("Téléphone", draft?.phone, "phone")}
+                  {renderField("full_name", "text", "Nom complet")}
+                  {renderField("first_name")}
+                  {renderField("last_name")}
+                  {renderField("sexe")}
+                  {renderField("date_naissance", "date")}
+                  {renderField("nationalite")}
+                  {renderField("cip_ifu", "text", "CIP / IFU")}
+                  {renderField("email", "email")}
+                  {renderField("phone", "tel", "Téléphone")}
                 </div>
               </article>
 
               <article className="rounded-2xl border border-border p-5 dark:border-dark_border">
                 <h2 className="text-lg font-semibold">Scolarité</h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {renderField(
-                    "Année d’entrée",
-                    draft?.annee_entree,
-                    "annee_entree"
-                  )}
-                  {renderField(
-                    "Année de sortie",
-                    draft?.annee_sortie,
-                    "annee_sortie"
-                  )}
-                  {renderField(
-                    "Série / Filière",
-                    draft?.serie_filiere,
-                    "serie_filiere"
-                  )}
-                  {renderField(
-                    "Dernière classe",
-                    draft?.derniere_classe,
-                    "derniere_classe"
-                  )}
-                  {renderField(
-                    "Diplôme obtenu",
-                    draft?.diplome_obtenu,
-                    "diplome_obtenu"
-                  )}
-                  {renderField(
-                    "Promotion / génération",
-                    draft?.promotion_generation,
-                    "promotion_generation"
-                  )}
+                  {renderField("promo", "text", "Promotion (inscription)")}
+                  {renderField("annee_entree")}
+                  {renderField("annee_sortie")}
+                  {renderField("serie_filiere")}
+                  {renderField("derniere_classe")}
+                  {renderField("diplome_obtenu")}
+                  {renderField("promotion_generation")}
                 </div>
               </article>
 
               <article className="rounded-2xl border border-border p-5 dark:border-dark_border">
                 <h2 className="text-lg font-semibold">Profession</h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {renderField("Profession", draft?.profession, "profession")}
-                  {renderField(
-                    "Fonction actuelle",
-                    draft?.fonction_actuelle,
-                    "fonction_actuelle"
-                  )}
-                  {renderField(
-                    "Employeur / structure",
-                    draft?.employeur_structure,
-                    "employeur_structure"
-                  )}
-                  {renderField(
-                    "Domaine d’activité",
-                    draft?.domaine_activite,
-                    "domaine_activite"
-                  )}
+                  {renderField("profession")}
+                  {renderField("fonction_actuelle")}
+                  {renderField("employeur_structure")}
+                  {renderField("domaine_activite")}
                 </div>
               </article>
 
               <article className="rounded-2xl border border-border p-5 dark:border-dark_border">
                 <h2 className="text-lg font-semibold">Contact & réseaux</h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {renderField(
-                    "Téléphone principal",
-                    draft?.telephone_principal,
-                    "telephone_principal"
-                  )}
-                  {renderField(
-                    "Téléphone secondaire",
-                    draft?.telephone_secondaire,
-                    "telephone_secondaire"
-                  )}
-                  {renderField(
-                    "Ville de résidence",
-                    draft?.ville_residence,
-                    "ville_residence"
-                  )}
-                  {renderField(
-                    "Pays de résidence",
-                    draft?.pays_residence,
-                    "pays_residence"
-                  )}
-                  {renderField(
-                    "Adresse complète",
-                    draft?.adresse_complete,
-                    "adresse_complete"
-                  )}
-                  {renderField(
-                    "Email secondaire",
-                    draft?.email_secondaire,
-                    "email_secondaire",
-                    "email"
-                  )}
-                  {renderField("WhatsApp", draft?.whatsapp, "whatsapp")}
-                  {renderField("Facebook", draft?.facebook, "facebook")}
-                  {renderField("LinkedIn", draft?.linkedin, "linkedin")}
-                  {renderField(
-                    "Autres réseaux",
-                    draft?.autres_reseaux,
-                    "autres_reseaux"
-                  )}
+                  {renderField("telephone_principal", "tel")}
+                  {renderField("telephone_secondaire", "tel")}
+                  {renderField("ville_residence")}
+                  {renderField("pays_residence")}
+                  {renderTextarea("adresse_complete", 2)}
+                  {renderField("email_secondaire", "email")}
+                  {renderField("whatsapp", "tel")}
+                  {renderField("facebook")}
+                  {renderField("linkedin")}
+                  {renderField("autres_reseaux")}
                 </div>
               </article>
 
@@ -285,47 +396,17 @@ export default function ProfilePage() {
                   Vie amicale & observations
                 </h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {renderField(
-                    "Date d’adhésion",
-                    draft?.date_adhesion_amicale,
-                    "date_adhesion_amicale",
-                    "date"
+                  {renderField("date_adhesion_amicale", "date")}
+                  {renderSelectField("statut_membre", MEMBER_STATUS_OPTIONS)}
+                  {renderSelectField(
+                    "situation_cotisations",
+                    COTISATION_SITUATION_OPTIONS
                   )}
-                  {renderField(
-                    "Statut membre",
-                    draft?.statut_membre,
-                    "statut_membre"
-                  )}
-                  {renderField(
-                    "Situation cotisations",
-                    draft?.situation_cotisations,
-                    "situation_cotisations"
-                  )}
-                  {renderField(
-                    "Poste amicale",
-                    draft?.poste_amicale,
-                    "poste_amicale"
-                  )}
-                  {renderField(
-                    "Disponibilité bénévolat",
-                    draft?.disponibilite_benevolat,
-                    "disponibilite_benevolat"
-                  )}
-                  {renderField(
-                    "Compétences particulières",
-                    draft?.competences_particulieres,
-                    "competences_particulieres"
-                  )}
-                  {renderField(
-                    "Contribution possible",
-                    draft?.contribution_possible,
-                    "contribution_possible"
-                  )}
-                  {renderField(
-                    "Besoins / attentes",
-                    draft?.besoins_attentes,
-                    "besoins_attentes"
-                  )}
+                  {renderField("poste_amicale")}
+                  {renderField("disponibilite_benevolat")}
+                  {renderTextarea("competences_particulieres", 3)}
+                  {renderTextarea("contribution_possible", 3)}
+                  {renderTextarea("besoins_attentes", 3)}
                 </div>
               </article>
 
@@ -336,25 +417,23 @@ export default function ProfilePage() {
                     <ImageFileInput
                       label="Photo de profil"
                       value={draft?.photo || ""}
-                      onChange={(url) => {
-                        updateDraft("photo", url);
-                        if (url) showSuccess(AUTH_MESSAGES.imageUploaded);
-                      }}
+                      onChange={(url) => updateDraft("photo", url)}
                       onError={(msg) => showError(msg)}
-                      hint="JPG, PNG ou WebP — max. 5 Mo. Enregistrez le profil après l’upload."
+                      disabled={saving}
+                      hint="JPG, PNG ou WebP — max. 5 Mo. Cliquez sur Enregistrer après l’upload."
                     />
                   ) : (
                     <div className="flex justify-center">
                       <div className="h-36 w-36 overflow-hidden rounded-2xl border border-border bg-slate-100 dark:border-dark_border dark:bg-dark_border/40">
-                        {draft?.photo ? (
+                        {view?.photo ? (
                           <img
-                            src={draft.photo}
+                            src={view.photo}
                             alt="Photo de profil"
                             className="h-full w-full object-cover"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center px-4 text-center text-sm text-grey dark:text-white/60">
-                            Aucune photo — cliquez sur Modifier pour en ajouter une
+                            Aucune photo
                           </div>
                         )}
                       </div>
@@ -362,18 +441,22 @@ export default function ProfilePage() {
                   )}
                 </div>
               </article>
-            </div>
+            </fieldset>
           </section>
 
-          <aside className="space-y-6 w-full">
+          <aside className="w-full space-y-6">
             <ProfileCompletionCard
               percent={profileCompletion}
+              profile={profile}
+              hideButton={editing}
               onComplete={() => {
-                const step =
-                  ONBOARDING_STEPS[
-                    getOnboardingProgress(profile || {}).recommendedStep
-                  ]?.key ?? "identity";
-                router.push(`/onboarding?step=${step}`);
+                startEditing();
+                const first = getMissingProfileFields(profile || {})[0];
+                if (first) {
+                  document
+                    .getElementById(`field-${first.key}`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
               }}
             />
 
@@ -388,12 +471,44 @@ export default function ProfilePage() {
                   showSuccess(AUTH_MESSAGES.logoutSuccess);
                   router.push("/");
                 }}
-                className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-red-500 px-5 py-3 text-sm font-semibold text-white hover:bg-red-600">
+                className="mt-4 inline-flex w-full items-center justify-center rounded-full bg-red-500 px-5 py-3 text-sm font-semibold text-white hover:bg-red-600"
+              >
                 Se déconnecter
               </button>
             </section>
           </aside>
         </div>
+
+        {editing && (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 py-3 shadow-lg backdrop-blur dark:border-dark_border dark:bg-darkmode/95">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-grey dark:text-white/70">
+                <span className="font-semibold text-midnight_text dark:text-white">
+                  Modifications en cours
+                </span>{" "}
+                — enregistrez pour les appliquer
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  disabled={saving}
+                  className="rounded-full border border-border px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white disabled:opacity-70"
+                >
+                  {saving ? "Enregistrement..." : "Enregistrer"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );

@@ -40,7 +40,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
 
       if (result?.session) {
         showSuccess(AUTH_MESSAGES.registerSuccess);
-        router.push("/onboarding?step=identity");
+        router.push("/profile");
         return;
       }
 
@@ -63,7 +63,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
     <div>
       <div className="mb-6 text-center">
         <div className="flex items-center justify-center">
-          <Logo logoColor="/images/logo/Logo.png" />
+          <Logo />
         </div>
         <h2 className="text-xl font-bold mt-4 text-midnight_text dark:text-white">
           Rejoindre le répertoire des anciens élèves
@@ -132,7 +132,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-primary text-white py-3 rounded-md hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70">
+          className="w-full bg-primary text-white py-3 rounded-md hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70">
           {loading ? "Création du compte..." : "Rejoindre le répertoire"}{" "}
           {loading && <Loader />}
         </button>

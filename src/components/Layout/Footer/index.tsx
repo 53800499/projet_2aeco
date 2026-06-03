@@ -2,8 +2,11 @@ import React, { FC } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Logo from '@/components/Logo';
+import { useAuthProfile } from '@/app/context/AuthProfileContext';
 
 const Footer: FC = () => {
+    const { user } = useAuthProfile();
+
   return (
     <footer className="bg-darkmode relative z-1 border-t border-dark_border px-6">
       <div className="container mx-auto max-w-6xl px-4">
@@ -11,8 +14,7 @@ const Footer: FC = () => {
           <div className="md:col-span-4 sm:col-span-6 col-span-12 sm:border-r border-b border-solid border-dark_border flex items-center sm:border-b-0 sm:min-h-25 py-10 shrink-0 ">
             <div className="sm:content-normal sm:text-start text-center content-center sm:w-auto w-full">
               <Link href="/" className="md:block flex justify-center">
-              <Logo logoColor="/images/logo/Logo.png" />
-                
+                <Logo className='justify-center'/>
               </Link>
               <h2 className="text-white py-10 text-[32px] leading-tight font-bold">
                 Réseau des anciens élèves du CEG 2 de Ouidah
@@ -22,12 +24,13 @@ const Footer: FC = () => {
                 Rejoignez le répertoire numérique et restez connecté à votre
                 promotion.
               </p>
-
-              <Link
-                href="/inscription"
-                className="px-8 py-3 rounded-lg bg-primary text-white hover:bg-blue-700">
-                Rejoindre le répertoire
-              </Link>
+              {user ? null : (
+                <Link
+                  href="#inscription"
+                  className="py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-300 px-8">
+                  Rejoindre le répertoire
+                </Link>
+              )}
             </div>
           </div>
           <div className="md:col-span-4 sm:col-span-6 col-span-12 sm:flex items-center sm:min-h-25 py-10 justify-center shrink-0 md:border-r border-b sm:border-b-0 border-solid border-dark_border">
@@ -122,9 +125,10 @@ const Footer: FC = () => {
               <span className="font-bold text-white pb-4 inline-block text-2xl">
                 Abonnez-vous à la newsletter
               </span>
-              <p className="text-MistyBlue text-base pb-7 text-white/50">
-                Pour être mis à jour avec toutes les dernières nouvelles et offres, abonnez-vous à notre newsletter.
-              </p>
+              <p className="text-Mistygreen text-base pb-7 text-white/50">
+                Pour être mis à jour avec toutes les dernières nouvelles et
+                offres, abonnez-vous à notre newsletter.
+              </p>{/* 
               <form className="newsletter-form flex rounded-lg sm:w-full w-3/4 sm:mx-0 mx-auto">
                 <input
                   type="email"
@@ -133,10 +137,10 @@ const Footer: FC = () => {
                 />
                 <button
                   type="submit"
-                  className="p-[0.625rem] text-base font-medium bg-primary text-white border-none cursor-pointer rounded-e-lg outline-0 text-center w-[8.5625rem] hover:bg-blue-700 hover:shadow-none">
+                  className="p-[0.625rem] text-base font-medium bg-primary text-white border-none cursor-pointer rounded-e-lg outline-0 text-center w-[8.5625rem] hover:bg-green-700 hover:shadow-none">
                   S'abonner
                 </button>
-              </form>
+              </form> */}
             </div>
           </div>
         </div>

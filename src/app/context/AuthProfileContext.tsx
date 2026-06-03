@@ -12,7 +12,17 @@ interface AuthProfileContextType {
   loading: boolean;
   error: string | null;
   signIn: (input: { email: string; password: string }) => Promise<any>;
-  signUp: (input: { email: string; password: string; full_name: string; phone?: string; promo?: string }) => Promise<any>;
+  signUp: (input: {
+    email: string;
+    password: string;
+    full_name: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    promo?: string;
+    profession?: string;
+    parcours?: string;
+  }) => Promise<any>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<any | null>;
   loadProfile: (userId?: string) => Promise<any>;
@@ -90,7 +100,27 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
     return data;
   }, [supabase, syncProfile]);
 
-  const signUp = useCallback(async ({ email, password, full_name, phone, promo }: { email: string; password: string; full_name: string; phone?: string; promo?: string }) => {
+  const signUp = useCallback(async ({
+    email,
+    password,
+    full_name,
+    first_name,
+    last_name,
+    phone,
+    promo,
+    profession,
+    parcours,
+  }: {
+    email: string;
+    password: string;
+    full_name: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    promo?: string;
+    profession?: string;
+    parcours?: string;
+  }) => {
     if (!supabase) throw new Error("La configuration Supabase n’est pas disponible.");
 
     setLoading(true);
@@ -137,11 +167,11 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
           id: activeUser.id,
           email,
           full_name,
-          first_name: full_name.split(" ")[0] || "",
-          last_name: full_name.split(" ").slice(1).join(" ") || "",
+          first_name: first_name || full_name.split(" ")[0] || "",
+          last_name: last_name || full_name.split(" ").slice(1).join(" ") || "",
           phone: phone || "",
           promo: promo || "",
-          onboarding_completed: false,
+          onboarding_completed: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -153,6 +183,20 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
         setError(message);
         setLoading(false);
         throw new Error(message);
+      }
+
+      if (profession) {
+        await supabase.from("professional_profiles").upsert(
+          { user_id: activeUser.id, profession },
+          { onConflict: "user_id" }
+        );
+      }
+
+      if (parcours) {
+        await supabase.from("observations").upsert(
+          { user_id: activeUser.id, contribution_possible: parcours },
+          { onConflict: "user_id" }
+        );
       }
 
       setUser(activeUser);
@@ -180,7 +224,10 @@ export const AuthProfileProvider = ({ children }: { children: React.ReactNode })
     return { data };
   }, [saveProfileFromHook]);
 
-  const profileCompletion = profile?.profile_completion ?? getProfileCompletion(profile || {});
+  const profileCompletion = useMemo(
+    () => getProfileCompletion(profile ?? {}),
+    [profile]
+  );
 
   return (
     <AuthProfileContext.Provider value={{

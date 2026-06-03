@@ -1,4 +1,6 @@
-@import 'tailwindcss';
+/** @format */
+
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -8,7 +10,8 @@
 
   --shadow-service: 0px 3px 20px 0px #8e9ca90d;
   --shadow-deatail_shadow: 0px 20px 80px 0px #68758d26;
-  --shadow-dark-md: rgba(145, 158, 171, 0.2) 0px 0px 2px 0px,
+  --shadow-dark-md:
+    rgba(145, 158, 171, 0.2) 0px 0px 2px 0px,
     rgba(145, 158, 171, 0.12) 0px 12px 24px -4px;
 
   --transition-duration-150: 150ms;
@@ -40,17 +43,23 @@
   --z-index-2: 2;
   --z-index-999: 999;
 
-  --color-primary: #2f73f2;
-  --color-secondary: #547593;
-  --color-midnight_text: #102d47;
-  --color-grey: #668199;
-  --color-border: #ccd7e1;
-  --color-success: #3cd278;
-  --color-section: #f8fafc;
-  --color-darkmode: #081738;
-  --color-darklight: #000f30;
-  --color-dark_border: #224767;
-  --color-Sky-blue-mist: #c0d5fb;
+  --color-primary: #207226;
+  --color-secondary: #7a513f;
+  --color-midnight_text: #13241d;
+  /* --color-Sky-blue-mist: #a8d9ef; */
+
+  --color-grey: #70877a; /* Gris vert doux */
+  --color-border: #d9e5de; /* Bordures claires */
+
+  --color-success: #3d9b47; /* Vert succès cohérent */
+
+  --color-section: #f2f7f7; /* Fond très clair */
+
+  --color-darkmode: #071514; /* Dark mode principal */
+  --color-darklight: #102421; /* Dark secondaire */
+  --color-dark_border: #284f41; /* Bordures dark */
+
+  --color-Sky-blue-mist: #b5def1; /* Bleu ciel du logo */
 
   --background-image-gradient-radial: radial-gradient(var(--tw-gradient-stops));
   --background-image-gradient-conic: conic-gradient(
@@ -154,7 +163,7 @@ body {
   .plaquette-card {
     break-inside: avoid;
     box-shadow: none !important;
-    border: 1px solid #e2e8f0 !important;
+    border: 1px solid #0f2f2d !important;
   }
 
   body {

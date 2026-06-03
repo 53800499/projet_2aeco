@@ -37,8 +37,8 @@ export const useSupabaseAuth = () => {
 
     const redirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}/onboarding?step=identity`
-        : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/onboarding?step=identity`;
+        ? `${window.location.origin}/profile`
+        : `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/profile`;
 
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -67,7 +67,7 @@ export const useSupabaseAuth = () => {
           last_name: full_name.split(" ").slice(1).join(" ") || "",
           phone: phone || "",
           promo: promo || "",
-          onboarding_completed: false,
+          onboarding_completed: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },

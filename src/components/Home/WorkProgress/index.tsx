@@ -39,14 +39,21 @@ const Progresswork = ({ isColorMode }: { isColorMode: Boolean }) => {
       <div className="container mx-auto max-w-6xl px-4">
         <div className="grid md:grid-cols-12 items-center gap-7">
           {/* IMAGE */}
-          <div className="md:col-span-6">
+          <div className="md:col-span-6 relative h-[250px] md:h-full overflow-hidden rounded-lg">
             <Image
-              src="/images/work-progress/image.jpg"
-              alt="souvenirs CEG 2 Ouidah"
-              width={375}
-              height={300}
-              style={{ width: "100%", height: "100%" }}
-              className="md:block hidden"
+              src="/images/work-progress/img1.jpeg"
+              alt="Souvenirs CEG 2 Ouidah"
+              fill
+              className="object-cover block md:hidden"
+              priority
+            />
+
+            <Image
+              src="/images/work-progress/img1.jpeg"
+              alt="Souvenirs CEG 2 Ouidah"
+              fill
+              className="object-cover hidden md:block"
+              priority
             />
           </div>
 

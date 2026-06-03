@@ -1,18 +1,69 @@
 "use client";
 /** @format */
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
+import { useAuthModal } from "@/app/context/AuthModalContext";
+import { useAuthFeedback } from "@/hooks/useAuthFeedback";
+import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
+import Loader from "@/components/Common/Loader";
+import { associationObjectives } from "@/app/api/data";
 
 const Contactform = () => {
-  const { user } = useAuthProfile();
-  
-    if (!user ) return null;
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const { user, signUp } = useAuthProfile();
+  const { openSignIn } = useAuthModal();
+  const { showSuccess, showError } = useAuthFeedback();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = new FormData(e.currentTarget);
+      const value = Object.fromEntries(data.entries()) as Record<string, string>;
+
+      const result = await signUp({
+        email: value.email,
+        password: value.password,
+        full_name: value.name,
+        phone: value.phone,
+        promo: value.promo,
+      });
+
+      if (result?.session) {
+        showSuccess(AUTH_MESSAGES.registerSuccess);
+        router.push("/profile");
+        return;
+      }
+
+      const msg = formatAuthError(
+        "Email not confirmed",
+        "Compte créé mais connexion impossible. Désactivez la confirmation email dans Supabase (Auth → Email) pour un accès immédiat."
+      );
+      setError(msg);
+      showError(msg);
+    } catch (err: unknown) {
+      const msg = formatAuthError(err, "Impossible de créer votre compte.");
+      setError(msg);
+      showError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (user) return null;
+
   return (
     <section
       className="overflow-x-hidden bg-darkmode dark:bg-darklight"
-      id="inscription">
+      id="inscription"
+    >
       <div className="container mx-auto max-w-6xl px-4">
         <div className="grid md:grid-cols-12 grid-cols-1 md:gap-7 gap-0">
           {/* INFORMATIONS */}
@@ -20,7 +71,8 @@ const Contactform = () => {
             className="row-start-1 col-start-1 row-end-2 md:col-end-7 col-end-12"
             data-aos="fade-left"
             data-aos-delay="200"
-            data-aos-duration="1000">
+            data-aos-duration="1000"
+          >
             <div className="flex gap-2 items-center justify-start">
               <span className="w-3 h-3 rounded-full bg-success"></span>
               <span className="font-medium text-sm text-white">
@@ -32,7 +84,6 @@ const Contactform = () => {
               Rejoignez le répertoire des anciens élèves du CEG 2 de Ouidah
             </h2>
 
-            {/* INFOS CONTACT / PROJET */}
             <div className="grid grid-cols-6 pb-12 border-b border-dark_border">
               <div className="col-span-3">
                 <span className="text-white/50 text-lg">Téléphone</span>
@@ -45,18 +96,21 @@ const Contactform = () => {
               </div>
 
               <div className="col-span-6 pt-8">
-                <span className="text-white/50 text-lg">Objectif</span>
-                <p className="text-white text-lg">
-                  Créer un annuaire des anciens élèves pour renforcer les liens
-                  et les opportunités
+                <span className="text-white/50 text-lg">Objectifs</span>
+                <p className="text-white text-lg mt-2">
+                  {associationObjectives.intro}
                 </p>
+                <ul className="mt-3 space-y-2 list-disc list-inside text-white/90 text-base">
+                  {associationObjectives.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
               </div>
             </div>
 
-            {/* MOTIVATION */}
             <div className="pt-12">
               <p className="text-white/50 pb-4 text-base">
-                Ensemble, reconnectons les anciens élèves
+                {associationObjectives.intro}
               </p>
 
               <div className="flex items-center flex-wrap md:gap-14 gap-7">
@@ -81,70 +135,99 @@ const Contactform = () => {
             data-aos="fade-right"
             data-aos-delay="200"
             data-aos-duration="1000"
-            className="relative md:row-start-1 row-start-2 md:col-start-8 col-start-1 col-end-13">
+            className="relative md:row-start-1 row-start-2 md:col-start-8 col-start-1 col-end-13"
+          >
             <div className="lg:mt-0 mt-8 bg-white dark:bg-darkmode max-w-[50rem] m-auto pt-[2.1875rem] pb-8 px-[2.375rem] rounded-md relative z-10">
               <h2 className="sm:text-3xl text-lg font-bold text-midnight_text mb-3 dark:text-white">
-                Inscription au répertoire
+                Rejoindre le répertoire des anciens élèves
               </h2>
+              <p className="text-sm text-gray-500 dark:text-white/60 mb-6">
+                CEG 2 Ouidah — Crée ton profil et reconnecte-toi à ta promotion
+                🎓
+              </p>
 
-              <form className="flex w-full m-auto justify-between flex-wrap gap-4">
-                {/* NOM */}
-                <div className="flex gap-4 w-full">
+              {error && (
+                <div className="mb-4 text-red-600 text-center bg-red-100 dark:bg-red-900 w-full rounded-md border px-5 py-3">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <div className="mb-[18px]">
                   <input
-                    className="w-full px-4 py-3 border rounded-lg"
                     type="text"
-                    placeholder="Nom"
-                  />
-                  <input
-                    className="w-full px-4 py-3 border rounded-lg"
-                    type="text"
-                    placeholder="Prénom"
+                    name="name"
+                    required
+                    placeholder="Nom complet"
+                    className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
                   />
                 </div>
 
-                {/* EMAIL */}
-                <input
-                  type="email"
-                  className="w-full px-4 py-3 border rounded-lg"
-                  placeholder="email@gmail.com"
-                />
-
-                {/* PROMOTION */}
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 border rounded-lg"
-                  placeholder="Promotion (ex: 2018)"
-                />
-
-                {/* PROFESSION */}
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 border rounded-lg"
-                  placeholder="Profession actuelle"
-                />
-
-                {/* MESSAGE */}
-                <textarea
-                  className="w-full h-40 px-4 py-3 border rounded-lg"
-                  placeholder="Parlez-nous de votre parcours depuis le CEG 2..."
-                />
-
-                {/* CONSENTEMENT */}
-                <div className="flex items-start gap-2">
-                  <input type="checkbox" />
-                  <p className="text-gray dark:text-white/50">
-                    J’accepte de rejoindre le répertoire des anciens élèves du
-                    CEG 2 de Ouidah
-                  </p>
+                <div className="mb-[18px]">
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="Adresse email"
+                    className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+                  />
                 </div>
 
-                {/* BUTTON */}
+                <div className="mb-[18px]">
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    placeholder="Numéro WhatsApp"
+                    className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+                  />
+                </div>
+
+                <div className="mb-[18px]">
+                  <input
+                    type="text"
+                    name="promo"
+                    required
+                    placeholder="Année ou promotion (ex: 2018-2019)"
+                    className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <input
+                    type="password"
+                    name="password"
+                    required
+                    placeholder="Mot de passe"
+                    className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+                  />
+                </div>
+
                 <button
-                  className="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700"
-                  type="submit">
-                  Rejoindre le répertoire
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-primary text-white py-3 rounded-md hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {loading ? "Création du compte..." : "Rejoindre le répertoire"}{" "}
+                  {loading && <Loader />}
                 </button>
               </form>
+
+              <p className="text-xs text-gray-500 mt-4 text-center dark:text-white/50">
+                En rejoignant, tu pourras être visible dans l’annuaire des anciens
+                élèves du CEG 2 Ouidah.
+              </p>
+
+              <p className="text-center mt-4 text-sm dark:text-white/80">
+                Déjà inscrit ?
+                <button
+                  type="button"
+                  onClick={() => openSignIn()}
+                  className="text-primary ml-2 hover:underline"
+                >
+                  Se connecter
+                </button>
+              </p>
             </div>
           </div>
         </div>

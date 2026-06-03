@@ -1,16 +1,20 @@
 "use client";
 
 import React from "react";
+import { ProfileRecord } from "@/lib/profile";
+import ProfileMissingFieldsAlert from "@/components/Auth/ProfileMissingFieldsAlert";
 
 interface ProfileCompletionCardProps {
   percent: number;
-  onComplete: () => void;
+  profile?: Partial<ProfileRecord> | null;
+  onComplete?: () => void;
   subtitle?: string;
   hideButton?: boolean;
 }
 
 const ProfileCompletionCard = ({
   percent,
+  profile,
   onComplete,
   subtitle,
   hideButton = false,
@@ -18,7 +22,9 @@ const ProfileCompletionCard = ({
   return (
     <section className="rounded-3xl border border-border bg-white p-6 shadow-service dark:border-dark_border dark:bg-darkmode">
       <p className="text-sm uppercase tracking-[0.25em] text-primary">Profil</p>
-      <h3 className="mt-2 text-2xl font-semibold text-midnight_text dark:text-white">Votre profil est à {percent}%</h3>
+      <h3 className="mt-2 text-2xl font-semibold text-midnight_text dark:text-white">
+        Votre profil est à {percent}%
+      </h3>
       <p className="mt-3 text-sm text-grey dark:text-white/70">
         {subtitle ||
           "Ce pourcentage est le même sur votre profil, l’administration et la plaquette numérique du CEG 2 Ouidah."}
@@ -31,11 +37,20 @@ const ProfileCompletionCard = ({
         />
       </div>
 
-      {!hideButton && percent < 100 && (
+      {profile && percent < 100 && (
+        <ProfileMissingFieldsAlert
+          profile={profile}
+          percent={percent}
+          maxItems={6}
+          className="mt-5"
+        />
+      )}
+
+      {!hideButton && percent < 100 && onComplete && (
         <button
           type="button"
           onClick={onComplete}
-          className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+          className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
         >
           Compléter mon profil
         </button>

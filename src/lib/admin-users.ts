@@ -1,4 +1,10 @@
-import { getProfileCompletion, ProfileRecord, withProfileCompletion } from "@/lib/profile";
+import {
+  getProfileCompletion,
+  isPlaquetteEligible,
+  PLAQUETTE_MIN_PROFILE_COMPLETION,
+  ProfileRecord,
+  withProfileCompletion,
+} from "@/lib/profile";
 import { PlaquetteMember } from "@/lib/plaquette";
 import { SupabaseClient } from "@supabase/supabase-js";
 
@@ -29,16 +35,18 @@ export interface AdminDashboardStats {
     totalDeleted: number;
     totalAll: number;
     newThisMonth: number;
-    onboardingComplete: number;
-    onboardingPending: number;
+    profileComplete100: number;
+    profileIncomplete: number;
     admins: number;
     avgCompletion: number;
-    completionRate: number;
+    profileCompleteRate: number;
     plaquetteEligible: number;
     visibleInPlaquette: number;
   };
   byRole: { role: string; count: number }[];
-  byOnboarding: { status: string; count: number }[];
+  byProfileStatus: { status: string; count: number }[];
+  byStatutMembre: { statut: string; count: number }[];
+  byCotisation: { situation: string; count: number }[];
   byPromo: { promo: string; count: number }[];
   bySexe: { sexe: string; count: number }[];
   byCompletion: { range: string; count: number }[];
@@ -46,6 +54,13 @@ export interface AdminDashboardStats {
   byVisibility: { visible: boolean; count: number }[];
 }
 
+/** Statistiques agrégées exposées sur le site public (sans données personnelles). */
+export interface PublicStats {
+  totalActive: number;
+  promoCount: number;
+  countryCount: number;
+  photoCompletionRate: number;
+}
 
 export const fetchFullProfile = async (
   admin: SupabaseClient,
@@ -88,19 +103,8 @@ const mapUserRow = async (
   u: Record<string, unknown>
 ): Promise<AdminUserRow> => {
   const id = u.id as string;
-  const [loc, pro, media] = await Promise.all([
-    admin.from("locations").select("ville_residence, pays_residence").eq("user_id", id).maybeSingle(),
-    admin.from("professional_profiles").select("profession").eq("user_id", id).maybeSingle(),
-    admin.from("media").select("photo").eq("user_id", id).maybeSingle(),
-  ]);
-
-  const partial: ProfileRecord = {
-    ...(u as ProfileRecord),
-    ville_residence: loc.data?.ville_residence,
-    pays_residence: loc.data?.pays_residence,
-    profession: pro.data?.profession,
-    photo: media.data?.photo,
-  };
+  const fullProfile = await fetchFullProfile(admin, id);
+  const merged = fullProfile ?? (u as ProfileRecord);
 
   return {
     id,
@@ -111,11 +115,11 @@ const mapUserRow = async (
     role: (u.role as string) || "member",
     onboarding_completed: Boolean(u.onboarding_completed),
     visible_in_plaquette: u.visible_in_plaquette !== false,
-    profile_completion: getProfileCompletion(partial),
-    photo: media.data?.photo ?? null,
-    ville_residence: loc.data?.ville_residence ?? null,
-    pays_residence: loc.data?.pays_residence ?? null,
-    profession: pro.data?.profession ?? null,
+    profile_completion: getProfileCompletion(merged),
+    photo: merged.photo ?? null,
+    ville_residence: merged.ville_residence ?? null,
+    pays_residence: merged.pays_residence ?? null,
+    profession: merged.profession ?? null,
     created_at: (u.created_at as string) || "",
     updated_at: (u.updated_at as string) || "",
     deleted_at: (u.deleted_at as string) || null,
@@ -228,7 +232,7 @@ export const createUserForAdmin = async (
     phone: input.phone || "",
     promo: input.promo || "",
     role: input.role === "admin" ? "admin" : "member",
-    onboarding_completed: false,
+    onboarding_completed: true,
     visible_in_plaquette: true,
     deleted_at: null,
     created_at: new Date().toISOString(),
@@ -247,7 +251,6 @@ export const getPlaquetteMembers = async (
     .from("users")
     .select("id")
     .is("deleted_at", null)
-    .eq("onboarding_completed", true)
     .eq("visible_in_plaquette", true);
 
   if (error) throw error;
@@ -257,6 +260,7 @@ export const getPlaquetteMembers = async (
   for (const row of data || []) {
     const profile = await fetchFullProfile(admin, row.id);
     if (!profile) continue;
+    if (!isPlaquetteEligible(profile)) continue;
     if (promoFilter === "__none__" && profile.promo?.trim()) continue;
     if (promoFilter && promoFilter !== "__none__" && profile.promo !== promoFilter) continue;
 
@@ -299,6 +303,47 @@ const completionBucket = (pct: number) => {
   return "0-25%";
 };
 
+export const getPublicStats = async (admin: SupabaseClient): Promise<PublicStats> => {
+  const { data: activeUsers, error } = await admin
+    .from("users")
+    .select("id, promo")
+    .is("deleted_at", null);
+
+  if (error) {
+    throw new Error(`Lecture des utilisateurs impossible : ${error.message}`);
+  }
+
+  const users = activeUsers || [];
+  const totalActive = users.length;
+
+  if (totalActive === 0) {
+    return { totalActive: 0, promoCount: 0, countryCount: 0, photoCompletionRate: 0 };
+  }
+
+  const promoCount = new Set(
+    users.map((u) => u.promo?.trim()).filter((p): p is string => Boolean(p))
+  ).size;
+
+  const userIds = users.map((u) => u.id);
+
+  const [{ data: locations }, { data: media }] = await Promise.all([
+    admin.from("locations").select("pays_residence").in("user_id", userIds),
+    admin.from("media").select("photo").in("user_id", userIds),
+  ]);
+
+  const countryCount = new Set(
+    (locations || [])
+      .map((l) => l.pays_residence?.trim())
+      .filter((p): p is string => Boolean(p))
+  ).size;
+
+  const withPhoto = (media || []).filter((m) => Boolean(m.photo?.trim())).length;
+  const photoCompletionRate =
+    totalActive > 0 ? Math.round((withPhoto / totalActive) * 100) : 0;
+
+  return { totalActive, promoCount, countryCount, photoCompletionRate };
+};
+
 export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboardStats> => {
   const { data: allUsers, error } = await admin.from("users").select("*");
 
@@ -318,12 +363,9 @@ export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboa
     (u) => u.created_at && new Date(u.created_at) >= thirtyDaysAgo
   ).length;
 
-  const onboardingComplete = active.filter((u) => u.onboarding_completed).length;
-  const plaquetteEligible = active.filter(
-    (u) => u.onboarding_completed && u.visible_in_plaquette !== false
-  ).length;
-
   const byPromo: Record<string, number> = {};
+  const byStatutMembre: Record<string, number> = {};
+  const byCotisation: Record<string, number> = {};
   const bySexe: Record<string, number> = {};
   const byRole: Record<string, number> = {};
   const byMonth: Record<string, number> = {};
@@ -348,8 +390,8 @@ export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboa
     }
   });
 
-  const completionSamples = await Promise.all(
-    active.slice(0, 30).map(async (u) => {
+  const completionByUser = await Promise.all(
+    active.map(async (u) => {
       try {
         const p = await fetchFullProfile(admin, u.id);
         return p ? getProfileCompletion(p) : 0;
@@ -359,13 +401,35 @@ export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboa
     })
   );
 
-  completionSamples.forEach((pct) => {
+  completionByUser.forEach((pct) => {
     byCompletion[completionBucket(pct)] += 1;
   });
 
+  const profileComplete100 = completionByUser.filter((p) => p >= 100).length;
+  const plaquetteEligible = active.filter(
+    (u, i) =>
+      u.visible_in_plaquette !== false &&
+      (completionByUser[i] ?? 0) >= PLAQUETTE_MIN_PROFILE_COMPLETION
+  ).length;
+
+  const activeIds = active.map((u) => u.id);
+  if (activeIds.length > 0) {
+    const { data: amicales } = await admin
+      .from("amicale_memberships")
+      .select("statut_membre, situation_cotisations")
+      .in("user_id", activeIds);
+
+    (amicales || []).forEach((a) => {
+      const statutKey = a.statut_membre?.trim() || "Non renseigné";
+      byStatutMembre[statutKey] = (byStatutMembre[statutKey] || 0) + 1;
+      const cotKey = a.situation_cotisations?.trim() || "Non renseigné";
+      byCotisation[cotKey] = (byCotisation[cotKey] || 0) + 1;
+    });
+  }
+
   const avgCompletion =
-    completionSamples.length > 0
-      ? Math.round(completionSamples.reduce((a, b) => a + b, 0) / completionSamples.length)
+    completionByUser.length > 0
+      ? Math.round(completionByUser.reduce((a, b) => a + b, 0) / completionByUser.length)
       : 0;
 
   const monthLabels: Record<string, string> = {};
@@ -386,20 +450,26 @@ export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboa
       totalDeleted: deleted.length,
       totalAll: users.length,
       newThisMonth,
-      onboardingComplete,
-      onboardingPending: active.length - onboardingComplete,
+      profileComplete100,
+      profileIncomplete: active.length - profileComplete100,
       admins: active.filter((u) => u.role === "admin").length,
       avgCompletion,
-      completionRate:
-        active.length > 0 ? Math.round((onboardingComplete / active.length) * 100) : 0,
+      profileCompleteRate:
+        active.length > 0 ? Math.round((profileComplete100 / active.length) * 100) : 0,
       plaquetteEligible,
       visibleInPlaquette: active.filter((u) => u.visible_in_plaquette !== false).length,
     },
     byRole: Object.entries(byRole).map(([role, count]) => ({ role, count })),
-    byOnboarding: [
-      { status: "Terminé", count: onboardingComplete },
-      { status: "En cours", count: active.length - onboardingComplete },
+    byProfileStatus: [
+      { status: "Profil complet (100%)", count: profileComplete100 },
+      { status: "Profil à compléter", count: active.length - profileComplete100 },
     ],
+    byStatutMembre: Object.entries(byStatutMembre)
+      .map(([statut, count]) => ({ statut, count }))
+      .sort((a, b) => b.count - a.count),
+    byCotisation: Object.entries(byCotisation)
+      .map(([situation, count]) => ({ situation, count }))
+      .sort((a, b) => b.count - a.count),
     byPromo: Object.entries(byPromo)
       .map(([promo, count]) => ({ promo, count }))
       .sort((a, b) => b.count - a.count),

@@ -50,12 +50,7 @@ export default function PlaquettePage() {
 
   return (
     <>
-          <HeroSub
-            title="Plaquette numérique — CEG 2 Ouidah"
-            description="Répertoire officiel des anciens élèves du Collège d’enseignement général n°2 de Ouidah. Seuls les profils validés (onboarding terminé) y figurent."
-            breadcrumbLinks={breadcrumbLinks}
-          />
-    <main className="bg-gradient-to-b from-slate-50 to-white dark:from-darkmode dark:to-darklight">
+    <main className="bg-gradient-to-b from-slate-50 to-white dark:from-darkmode dark:to-darklight mt-24">
       {/* En-tête — masqué à l'impression */}
       <header className="plaquette-no-print border-b border-slate-200 bg-white/90 backdrop-blur dark:border-dark_border dark:bg-darklight/90">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
@@ -85,13 +80,13 @@ export default function PlaquettePage() {
                   {p}
                 </option>
               ))}
-            </select>
+            </select>{/* 
             <button
               type="button"
               onClick={handlePrint}
               className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
               Imprimer / PDF
-            </button>
+            </button> */}
           </div>
         </div>
       </header>
@@ -104,9 +99,6 @@ export default function PlaquettePage() {
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-grey dark:text-white/70">
           Annuaire numérique — promotion par promotion
-        </p>
-        <p className="mt-8 text-xs text-grey print:block">
-          Généré le {new Date().toLocaleDateString("fr-FR", { dateStyle: "long" })}
         </p>
       </section>
 

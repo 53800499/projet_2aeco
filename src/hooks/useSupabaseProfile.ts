@@ -131,7 +131,7 @@ export const useSupabaseProfile = () => {
       phone: normalized.phone || normalized.telephone_principal || "",
       promo: normalized.promo || normalized.promotion_generation || "",
       email_secondaire: normalized.email_secondaire || "",
-      onboarding_completed: Boolean(normalized.onboarding_completed),
+      onboarding_completed: true,
       updated_at: timestamp,
     };
 
@@ -212,7 +212,7 @@ export const useSupabaseProfile = () => {
     return {
       data: withProfileCompletion({
         ...(data || normalized),
-        onboarding_completed: Boolean(normalized.onboarding_completed),
+        onboarding_completed: true,
       }),
       error: null,
     };

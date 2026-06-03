@@ -1,12 +1,17 @@
 /** @format */
 
+"use client";
+/** @format */
+
 import React from "react";
 import Link from "next/link";
-import { Servicebox } from "@/app/api/data";
+import { Servicebox, associationObjectives } from "@/app/api/data";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
+import { useAuthProfile } from "@/app/context/AuthProfileContext";
 
 const Services = () => {
+  const { user } = useAuthProfile();
   return (
     <section className="bg-section dark:bg-darklight" id="features">
       <div className="container mx-auto max-w-6xl px-4">
@@ -18,7 +23,7 @@ const Services = () => {
           data-aos-duration="1000">
           <span className="w-3 h-3 rounded-full bg-success"></span>
           <span className="font-medium text-midnight_text text-sm dark:text-white/50">
-            répertoire des anciens élèves
+            Association des anciens élèves — CEG2 Ouidah
           </span>
         </div>
 
@@ -27,8 +32,7 @@ const Services = () => {
           data-aos="fade-up"
           data-aos-delay="200"
           data-aos-duration="1000">
-          Un réseau structuré pour connecter les anciens élèves du CEG 2 de
-          Ouidah
+          {associationObjectives.intro}
         </h2>
 
         {/* CARDS */}
@@ -46,7 +50,7 @@ const Services = () => {
                 alt="feature icon"
                 width={40}
                 height={40}
-                className="w-10 h-10"
+                className="brightness-0 saturate-500"
               />
 
               {/* TITLE */}
@@ -58,16 +62,18 @@ const Services = () => {
               <p className="dark:text-white/50 text-base font-normal">
                 {item.description}
               </p>
-
-              {/* CTA */}
-              <Link
-                href="/inscription"
-                className="hover:text-blue-700 text-lg font-medium text-primary group flex items-center">
-                Rejoindre
-                <span>
-                  <Icon icon="ei:chevron-right" width="30" height="30" />
-                </span>
-              </Link>
+              {user ? null : (
+                <>
+                  <Link
+                    href="#inscription"
+                    className="hover:text-green-700 text-lg font-medium text-primary group flex items-center">
+                    Rejoindre
+                    <span>
+                      <Icon icon="ei:chevron-right" width="30" height="30" />
+                    </span>
+                  </Link>
+                </>
+              )}
             </div>
           ))}
         </div>

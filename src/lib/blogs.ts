@@ -13,7 +13,7 @@ export interface BlogPost {
   updated_at: string;
 }
 
-const toSlug = (input: string) =>
+export const slugifyBlogTitle = (input: string) =>
   input
     .toLowerCase()
     .trim()
@@ -24,7 +24,7 @@ const toSlug = (input: string) =>
 
 export const normalizeBlogInput = (input: Partial<BlogPost>) => {
   const title = (input.title || "").trim();
-  const slug = (input.slug || "").trim() || toSlug(title);
+  const slug = (input.slug || "").trim() || slugifyBlogTitle(title);
   if (!title) throw new Error("Le titre est obligatoire.");
   if (!slug) throw new Error("Le slug est obligatoire.");
 

@@ -38,42 +38,44 @@ export default function AdminDashboardPage() {
     { label: "Supprimés (logique)", value: o.totalDeleted, accent: "bg-slate-400" },
     { label: "Total historique", value: o.totalAll, accent: "bg-slate-600" },
     { label: "Nouveaux (30 j)", value: o.newThisMonth, accent: "bg-emerald-500" },
-    { label: "Onboarding terminé", value: o.onboardingComplete, accent: "bg-blue-500" },
-    { label: "Onboarding en cours", value: o.onboardingPending, accent: "bg-amber-500" },
+    { label: "Profils complets (100%)", value: o.profileComplete100, accent: "bg-green-500" },
+    { label: "Profils à compléter", value: o.profileIncomplete, accent: "bg-amber-500" },
     { label: "Éligibles plaquette", value: o.plaquetteEligible, accent: "bg-violet-500" },
     { label: "Visibles plaquette", value: o.visibleInPlaquette, accent: "bg-indigo-500" },
     { label: "Complétion moyenne", value: `${o.avgCompletion}%`, accent: "bg-rose-500" },
-    { label: "Taux onboarding", value: `${o.completionRate}%`, accent: "bg-cyan-500" },
+    { label: "Taux profils complets", value: `${o.profileCompleteRate}%`, accent: "bg-cyan-500" },
     { label: "Administrateurs", value: o.admins, accent: "bg-orange-500" },
   ];
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-midnight_text dark:text-white">
+    <div className="min-w-0 space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-midnight_text sm:text-2xl dark:text-white">
             Statistiques — tous les axes
           </h2>
           <p className="mt-1 text-sm text-grey dark:text-white/70">
-            Vue complète des membres : actifs, supprimés, onboarding, plaquette, promotions.
+            Vue complète des membres : actifs, supprimés, complétion profil, plaquette, promotions.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Link
             href="/admin/users"
-            className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+            className="inline-flex justify-center rounded-xl bg-primary px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-green-700"
+          >
             Gérer les utilisateurs
           </Link>
           <Link
             href="/plaquette"
             target="_blank"
-            className="rounded-xl border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5">
+            className="inline-flex justify-center rounded-xl border border-primary px-4 py-2.5 text-center text-sm font-semibold text-primary hover:bg-primary/5"
+          >
             Voir la plaquette →
           </Link>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {overviewCards.map((card) => (
           <div
             key={card.label}
@@ -85,16 +87,26 @@ export default function AdminDashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
         <StatBarChart
           title="Par promotion"
           items={stats.byPromo.map((p) => ({ label: p.promo, count: p.count }))}
           total={o.totalActive}
         />
         <StatBarChart
-          title="Par statut onboarding"
-          items={stats.byOnboarding.map((x) => ({ label: x.status, count: x.count }))}
-          barClass="bg-blue-500"
+          title="Par statut de profil"
+          items={stats.byProfileStatus.map((x) => ({ label: x.status, count: x.count }))}
+          barClass="bg-green-500"
+        />
+        <StatBarChart
+          title="Par statut membre"
+          items={stats.byStatutMembre.map((x) => ({ label: x.statut, count: x.count }))}
+          barClass="bg-teal-500"
+        />
+        <StatBarChart
+          title="Par situation de cotisation"
+          items={stats.byCotisation.map((x) => ({ label: x.situation, count: x.count }))}
+          barClass="bg-sky-500"
         />
         <StatBarChart
           title="Par rôle"

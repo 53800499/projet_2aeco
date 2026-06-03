@@ -17,25 +17,32 @@ export default function StatBarChart({
   const sum = total ?? items.reduce((a, b) => a + b.count, 0);
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-dark_border dark:bg-darklight">
-      <h3 className="font-semibold text-midnight_text dark:text-white">{title}</h3>
-      <ul className="mt-4 space-y-3">
+    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-dark_border dark:bg-darklight">
+      <h3 className="text-sm font-semibold text-midnight_text sm:text-base dark:text-white">
+        {title}
+      </h3>
+      <ul className="mt-4 space-y-4">
         {items.length === 0 ? (
           <li className="text-sm text-grey">Aucune donnée</li>
         ) : (
           items.map((row) => (
-            <li key={row.label} className="flex items-center justify-between gap-4">
-              <span className="min-w-0 flex-1 truncate text-sm text-midnight_text dark:text-white">
-                {row.label}
+            <li
+              key={row.label}
+              className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+            >
+              <span className="min-w-0 text-sm text-midnight_text dark:text-white sm:max-w-[45%] sm:flex-1">
+                <span className="line-clamp-2 break-words">{row.label}</span>
               </span>
-              <div className="flex flex-1 max-w-[200px] items-center gap-2">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-dark_border">
+              <div className="flex w-full items-center gap-2 sm:max-w-[55%] sm:flex-1">
+                <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-dark_border">
                   <div
                     className={`h-full rounded-full ${barClass}`}
                     style={{ width: `${(row.count / max) * 100}%` }}
                   />
                 </div>
-                <span className="w-8 text-right text-sm font-medium">{row.count}</span>
+                <span className="w-10 shrink-0 text-right text-sm font-medium tabular-nums">
+                  {row.count}
+                </span>
               </div>
             </li>
           ))

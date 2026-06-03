@@ -53,7 +53,7 @@ const Signin = ({ signInOpen }: { signInOpen?: (open: boolean) => void }) => {
   return (
     <>
       <div className="mb-6 text-center mx-auto inline-block max-w-[180px]">
-        <Logo logoColor="/images/logo/Logo.png" />
+        <Logo />
       </div>
 
       <div className="mb-8 text-center">
@@ -105,7 +105,7 @@ const Signin = ({ signInOpen }: { signInOpen?: (open: boolean) => void }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-primary py-3 text-white hover:bg-blue-700 transition disabled:cursor-not-allowed disabled:opacity-70">
+          className="w-full rounded-md bg-primary py-3 text-white hover:bg-green-700 transition disabled:cursor-not-allowed disabled:opacity-70">
           {loading ? "Connexion..." : "Accéder à mon espace ancien élève"}{" "}
           {loading && <Loader />}
         </button>

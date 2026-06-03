@@ -1,10 +1,14 @@
 /** @format */
 
 "use client";
+import { useAuthProfile } from "@/app/context/AuthProfileContext";
 import Image from "next/image";
 import Link from "next/link";
+import { associationObjectives } from "@/app/api/data";
 
 const Hero = () => {
+  const { user } = useAuthProfile();
+
   return (
     <section className="relative md:pt-44 pt-28 bg-white dark:bg-darklight bg-cover text-white">
       <div className="container mx-auto max-w-6xl px-4 grid grid-cols-12 gap-4 relative z-10">
@@ -25,17 +29,21 @@ const Hero = () => {
             Reconnecter les anciens élèves du CEG2 de Ouidah
           </h1>
 
-          <p className="text-grey dark:text-white/70 text-xl font-semibold">
-            Construisons ensemble un répertoire numérique des anciens élèves
-            pour préserver nos parcours, renforcer les liens et valoriser les
-            réussites de chaque promotion.
-          </p>
-
-          <Link
-            href="#inscription"
-            className="py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-300 px-8">
-            Rejoindre le répertoire
-          </Link>
+          <div className="text-gray-500 dark:text-white/70 text-lg font-semibold space-y-2">
+            <p>{associationObjectives.intro}</p>
+            <ul className="list-disc list-inside space-y-1 font-normal">
+              {associationObjectives.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          {user ? null : (
+            <Link
+              href="#inscription"
+              className="py-3 bg-primary text-white rounded-md hover:bg-green-700 transition duration-300 px-8">
+              Rejoindre le répertoire
+            </Link>
+          )}
 
           <div className="flex items-center mt-12 gap-4">
             <div className="flex items-center">
@@ -62,22 +70,56 @@ const Hero = () => {
               />
             </div>
 
-            <div>
-              <p className="text-sm font-normal text-grey max-w-56">
+            {user ?
+              <p className="text-sm font-normal text-gray-500 max-w-56">
+                Bienvenue, {user.user_metadata.full_name} ! Explorez votre
+                profil et connectez-vous avec d'autres anciens élèves.
+              </p>
+            : <p className="text-sm font-normal text-gray-500 max-w-56">
                 Vous êtes ancien élève ?{" "}
                 <Link
                   href="#inscription"
-                  className="text-primary hover:text-blue-700">
+                  className="text-primary hover:text-green-500">
                   Inscrivez-vous ici
                 </Link>{" "}
                 et rejoignez la communauté.
               </p>
-            </div>
+            }
           </div>
         </div>
 
         {/* RIGHT IMAGE */}
-        <div className="md:col-span-6 col-span-12 relative before:absolute before:content-[''] before:bg-[url('/images/hero/line-leyar.svg')] before:bg-no-repeat before:left-1/2 before:top-0 before:h-24 before:w-52 before:-z-10 before:translate-x-70% before:-translate-y-40% lg:before:inline-block before:hidden after:absolute after:content-[''] after:bg-[url('/images/hero/round-leyar.svg')] after:bg-no-repeat xl:after:inline-block after:hidden after:left-0 after:bottom-0 after:h-6.25 after:w-6.25 after:-z-10 after:-translate-x-1/2 after:translate-y-1/2">
+        <div
+          className="
+md:col-span-6 col-span-12 relative
+before:absolute before:content-['']
+before:bg-[url('/images/hero/line-leyar.svg')]
+before:bg-no-repeat
+before:left-1/2 before:top-0
+before:h-24 before:w-52
+before:-z-10
+before:translate-x-[70%]
+before:-translate-y-[40%]
+before:brightness-0
+before:saturate-100
+before:[filter:invert(28%)_sepia(76%)_saturate(570%)_hue-rotate(74deg)_brightness(92%)_contrast(91%)]
+
+lg:before:inline-block before:hidden
+
+after:absolute after:content-['']
+after:bg-[url('/images/hero/round-leyar.svg')]
+after:bg-no-repeat
+after:left-0 after:bottom-0
+after:h-6.25 after:w-6.25
+after:-z-10
+after:-translate-x-1/2
+after:translate-y-1/2
+after:brightness-0
+after:saturate-100
+after:[filter:invert(28%)_sepia(76%)_saturate(570%)_hue-rotate(74deg)_brightness(92%)_contrast(91%)]
+
+xl:after:inline-block after:hidden
+">
           <Image
             src="/images/hero/hero3.jpg"
             alt="communauté anciens élèves CEG 2 Ouidah"

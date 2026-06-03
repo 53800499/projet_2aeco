@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAdminApi, AdminUserRow, UserListStatus } from "@/hooks/useAdminApi";
 import { useAuthFeedback } from "@/hooks/useAuthFeedback";
-import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
+import { formatAuthError } from "@/lib/auth-messages";
+import { PLAQUETTE_MIN_PROFILE_COMPLETION } from "@/lib/profile";
 import AdminUserCreateModal from "@/components/admin/AdminUserCreateModal";
 
 const statusTabs: { key: UserListStatus; label: string }[] = [
@@ -12,6 +13,87 @@ const statusTabs: { key: UserListStatus; label: string }[] = [
   { key: "deleted", label: "Supprimés" },
   { key: "all", label: "Tous" },
 ];
+
+function UserCard({
+  u,
+  onArchive,
+  onRestore,
+}: {
+  u: AdminUserRow;
+  onArchive: () => void;
+  onRestore: () => void;
+}) {
+  const plaquetteOk =
+    !u.deleted_at &&
+    u.visible_in_plaquette &&
+    u.profile_completion >= PLAQUETTE_MIN_PROFILE_COMPLETION;
+
+  return (
+    <article
+      className={`rounded-2xl border border-slate-200 bg-white p-4 dark:border-dark_border dark:bg-darklight ${
+        u.deleted_at ? "opacity-80" : ""
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        {u.photo ? (
+          <img src={u.photo} alt="" className="h-12 w-12 shrink-0 rounded-full object-cover" />
+        ) : (
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+            {(u.full_name || u.email)[0].toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-midnight_text dark:text-white">
+            {u.full_name || "—"}
+          </p>
+          <p className="truncate text-xs text-grey">{u.email}</p>
+          <p className="mt-1 text-xs text-grey">Promo : {u.promo || "—"}</p>
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs dark:bg-dark_border">
+          Profil {u.profile_completion}%
+        </span>
+        {u.deleted_at ? (
+          <span className="rounded-full bg-slate-200 px-2.5 py-0.5 text-xs">Archivé</span>
+        ) : u.profile_completion >= 100 ? (
+          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs text-emerald-700">
+            Complet
+          </span>
+        ) : (
+          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs text-amber-700">
+            À compléter
+          </span>
+        )}
+        {!u.deleted_at && (
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-xs ${
+              plaquetteOk ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
+            }`}
+          >
+            Plaquette {plaquetteOk ? "Oui" : "Non"}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-100 pt-3 dark:border-dark_border">
+        <Link href={`/admin/users/${u.id}`} className="text-sm font-medium text-primary hover:underline">
+          Modifier
+        </Link>
+        {u.deleted_at ? (
+          <button type="button" onClick={onRestore} className="text-sm font-medium text-emerald-600 hover:underline">
+            Restaurer
+          </button>
+        ) : (
+          <button type="button" onClick={onArchive} className="text-sm font-medium text-red-600 hover:underline">
+            Archiver
+          </button>
+        )}
+      </div>
+    </article>
+  );
+}
 
 export default function AdminUsersPage() {
   const { fetchUsers, createUser, softDeleteUser, restoreUser } = useAdminApi();
@@ -64,7 +146,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <AdminUserCreateModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
@@ -75,9 +157,9 @@ export default function AdminUsersPage() {
         }}
       />
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-midnight_text dark:text-white">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold text-midnight_text sm:text-2xl dark:text-white">
             Gestion des utilisateurs
           </h2>
           <p className="text-sm text-grey dark:text-white/70">
@@ -87,7 +169,8 @@ export default function AdminUsersPage() {
         <button
           type="button"
           onClick={() => setCreateOpen(true)}
-          className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+          className="w-full rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 sm:w-auto"
+        >
           + Nouveau membre
         </button>
       </div>
@@ -101,37 +184,61 @@ export default function AdminUsersPage() {
               setStatus(tab.key);
               setPage(1);
             }}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+            className={`rounded-full px-3 py-2 text-sm font-medium transition sm:px-4 ${
               status === tab.key
                 ? "bg-primary text-white"
                 : "bg-slate-100 text-grey dark:bg-dark_border dark:text-white/70"
-            }`}>
+            }`}
+          >
             {tab.label}
           </button>
         ))}
       </div>
 
       <form
-        className="flex gap-2"
+        className="flex flex-col gap-2 sm:flex-row sm:items-center"
         onSubmit={(e) => {
           e.preventDefault();
           setPage(1);
           setQuery(search);
-        }}>
+        }}
+      >
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher…"
-          className="w-full max-w-md rounded-xl border border-slate-200 px-4 py-2 text-sm dark:border-dark_border dark:bg-darklight dark:text-white"
+          className="w-full min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm dark:border-dark_border dark:bg-darklight dark:text-white"
         />
-        <button type="submit" className="rounded-xl bg-slate-800 px-4 py-2 text-sm text-white dark:bg-primary">
+        <button
+          type="submit"
+          className="w-full rounded-xl bg-slate-800 px-4 py-2.5 text-sm text-white dark:bg-primary sm:w-auto"
+        >
           Rechercher
         </button>
       </form>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-dark_border dark:bg-darklight">
+      {/* Mobile : cartes */}
+      <div className="grid gap-3 md:hidden">
+        {loading ? (
+          <p className="py-8 text-center text-grey">Chargement…</p>
+        ) : users.length === 0 ? (
+          <p className="py-8 text-center text-grey">Aucun utilisateur.</p>
+        ) : (
+          users.map((u) => (
+            <UserCard
+              key={u.id}
+              u={u}
+              onArchive={() => handleSoftDelete(u.id, u.full_name || u.email)}
+              onRestore={() => handleRestore(u.id)}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Desktop : tableau */}
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white md:block dark:border-dark_border dark:bg-darklight">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[720px] text-left text-sm">
             <thead className="border-b bg-slate-50 dark:bg-dark_border/30">
               <tr>
                 <th className="px-4 py-3 font-semibold">Membre</th>
@@ -161,7 +268,8 @@ export default function AdminUsersPage() {
                     key={u.id}
                     className={`border-b dark:border-dark_border/50 ${
                       u.deleted_at ? "bg-slate-50/80 opacity-75 dark:bg-dark_border/20" : ""
-                    }`}>
+                    }`}
+                  >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {u.photo ? (
@@ -171,9 +279,9 @@ export default function AdminUsersPage() {
                             {(u.full_name || u.email)[0].toUpperCase()}
                           </div>
                         )}
-                        <div>
-                          <p className="font-medium">{u.full_name || "—"}</p>
-                          <p className="text-xs text-grey">{u.email}</p>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{u.full_name || "—"}</p>
+                          <p className="truncate text-xs text-grey">{u.email}</p>
                         </div>
                       </div>
                     </td>
@@ -182,7 +290,8 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3">
                       {u.deleted_at ? (
                         <span className="text-xs text-slate-400">—</span>
-                      ) : u.visible_in_plaquette && u.onboarding_completed ? (
+                      ) : u.visible_in_plaquette &&
+                        u.profile_completion >= PLAQUETTE_MIN_PROFILE_COMPLETION ? (
                         <span className="text-xs text-emerald-600">Oui</span>
                       ) : (
                         <span className="text-xs text-amber-600">Non</span>
@@ -191,13 +300,13 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3">
                       {u.deleted_at ? (
                         <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs">Archivé</span>
-                      ) : u.onboarding_completed ? (
+                      ) : u.profile_completion >= 100 ? (
                         <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
-                          Actif
+                          Complet
                         </span>
                       ) : (
                         <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
-                          Incomplet
+                          À compléter
                         </span>
                       )}
                     </td>
@@ -205,21 +314,24 @@ export default function AdminUsersPage() {
                       <div className="flex flex-wrap gap-2">
                         <Link
                           href={`/admin/users/${u.id}`}
-                          className="text-primary hover:underline text-xs font-medium">
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
                           Modifier
                         </Link>
                         {u.deleted_at ? (
                           <button
                             type="button"
                             onClick={() => handleRestore(u.id)}
-                            className="text-xs font-medium text-emerald-600 hover:underline">
+                            className="text-xs font-medium text-emerald-600 hover:underline"
+                          >
                             Restaurer
                           </button>
                         ) : (
                           <button
                             type="button"
                             onClick={() => handleSoftDelete(u.id, u.full_name || u.email)}
-                            className="text-xs font-medium text-red-600 hover:underline">
+                            className="text-xs font-medium text-red-600 hover:underline"
+                          >
                             Archiver
                           </button>
                         )}
@@ -234,20 +346,24 @@ export default function AdminUsersPage() {
       </div>
 
       {total > 15 && (
-        <div className="flex justify-center gap-2">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
           <button
             type="button"
             disabled={page <= 1}
             onClick={() => setPage((p) => p - 1)}
-            className="rounded-lg border px-4 py-2 text-sm disabled:opacity-40">
+            className="rounded-lg border px-4 py-2.5 text-sm disabled:opacity-40"
+          >
             Précédent
           </button>
-          <span className="flex items-center px-4 text-sm">Page {page} — {total} résultat(s)</span>
+          <span className="text-center text-sm text-grey">
+            Page {page} — {total} résultat(s)
+          </span>
           <button
             type="button"
             disabled={page * 15 >= total}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg border px-4 py-2 text-sm disabled:opacity-40">
+            className="rounded-lg border px-4 py-2.5 text-sm disabled:opacity-40"
+          >
             Suivant
           </button>
         </div>

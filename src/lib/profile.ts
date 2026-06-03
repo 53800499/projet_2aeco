@@ -48,6 +48,7 @@ export interface ProfileRecord {
   competences_particulieres?: string;
   contribution_possible?: string;
   besoins_attentes?: string;
+  /** @deprecated Conservé en base ; la complétion du profil remplace l’onboarding. */
   onboarding_completed?: boolean;
   visible_in_plaquette?: boolean;
   deleted_at?: string | null;
@@ -57,7 +58,7 @@ export interface ProfileRecord {
 }
 
 /** Champs pris en compte pour le % — unique source de vérité dans toute l’application */
-export const PROFILE_COMPLETION_FIELD_KEYS: (keyof ProfileRecord)[] = [
+export const PROFILE_COMPLETION_FIELD_KEYS = [
   "first_name",
   "last_name",
   "sexe",
@@ -93,9 +94,55 @@ export const PROFILE_COMPLETION_FIELD_KEYS: (keyof ProfileRecord)[] = [
   "competences_particulieres",
   "contribution_possible",
   "besoins_attentes",
-];
+] as const satisfies readonly (keyof ProfileRecord)[];
 
-/** Groupes pour l’affichage par étape onboarding (sous-ensemble du calcul global) */
+export const COTISATION_SITUATION_OPTIONS = ["Ajout", "Non ajout"] as const;
+export const MEMBER_STATUS_OPTIONS = ["Actif", "Sympathisant", "Honoraire"] as const;
+
+/** % minimum pour apparaître dans la plaquette numérique */
+export const PLAQUETTE_MIN_PROFILE_COMPLETION = 40;
+
+export type ProfileCompletionFieldKey = (typeof PROFILE_COMPLETION_FIELD_KEYS)[number];
+
+export const PROFILE_FIELD_LABELS: Record<ProfileCompletionFieldKey, string> = {
+  first_name: "Prénom",
+  last_name: "Nom",
+  sexe: "Sexe",
+  date_naissance: "Date de naissance",
+  nationalite: "Nationalité",
+  cip_ifu: "CIP / IFU",
+  photo: "Photo de profil",
+  annee_entree: "Année d’entrée",
+  annee_sortie: "Année de sortie",
+  serie_filiere: "Série / filière",
+  derniere_classe: "Dernière classe",
+  diplome_obtenu: "Diplôme obtenu",
+  promotion_generation: "Promotion / génération",
+  profession: "Profession",
+  fonction_actuelle: "Fonction actuelle",
+  employeur_structure: "Employeur / structure",
+  domaine_activite: "Domaine d’activité",
+  telephone_principal: "Téléphone principal",
+  telephone_secondaire: "Téléphone secondaire",
+  email: "Email",
+  ville_residence: "Ville de résidence",
+  pays_residence: "Pays de résidence",
+  adresse_complete: "Adresse complète",
+  date_adhesion_amicale: "Date d’adhésion amicale",
+  statut_membre: "Statut du membre",
+  situation_cotisations: "Situation de cotisation",
+  poste_amicale: "Poste à l’amicale",
+  disponibilite_benevolat: "Disponibilité bénévolat",
+  whatsapp: "WhatsApp",
+  facebook: "Facebook",
+  linkedin: "LinkedIn",
+  autres_reseaux: "Autres réseaux",
+  competences_particulieres: "Compétences particulières",
+  contribution_possible: "Contribution possible",
+  besoins_attentes: "Besoins / attentes",
+};
+
+/** Groupes pour l’affichage des sections du profil */
 export const PROFILE_COMPLETION_STEP_GROUPS: (keyof ProfileRecord)[][] = [
   ["sexe", "date_naissance", "nationalite", "cip_ifu", "photo"],
   [
@@ -185,12 +232,28 @@ export const getFieldsCompletionPercent = (
   return Math.round((filled / fieldKeys.length) * 100);
 };
 
-/**
- * Pourcentage de complétion du profil — identique partout :
- * onboarding, profil, admin, bannière, API.
- */
+/** Pourcentage de complétion du profil — identique partout (profil, admin, plaquette, bannière). */
 export const getProfileCompletion = (profile: Partial<ProfileRecord>): number => {
-  return getFieldsCompletionPercent(profile, PROFILE_COMPLETION_FIELD_KEYS);
+  return getFieldsCompletionPercent(profile, [...PROFILE_COMPLETION_FIELD_KEYS]);
+};
+
+export const getMissingProfileFields = (
+  profile: Partial<ProfileRecord>
+): { key: ProfileCompletionFieldKey; label: string }[] => {
+  const normalized = normalizeProfile(profile);
+  return PROFILE_COMPLETION_FIELD_KEYS.filter(
+    (key) => !isFilled(getFieldValue(normalized, key))
+  ).map((key) => ({
+    key,
+    label: PROFILE_FIELD_LABELS[key] || String(key),
+  }));
+};
+
+export const isPlaquetteEligible = (profile: Partial<ProfileRecord>): boolean => {
+  const p = profile as ProfileRecord;
+  if (p.deleted_at) return false;
+  if (p.visible_in_plaquette === false) return false;
+  return getProfileCompletion(profile) >= PLAQUETTE_MIN_PROFILE_COMPLETION;
 };
 
 /** Attache le % calculé au profil (à persister ou afficher) */

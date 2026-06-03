@@ -8,6 +8,13 @@ import { ProfileRecord } from "@/hooks/useSupabaseProfile";
 import ImageFileInput from "@/components/Common/ImageFileInput";
 import { useAuthFeedback } from "@/hooks/useAuthFeedback";
 import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
+import {
+  COTISATION_SITUATION_OPTIONS,
+  getProfileCompletion,
+  isPlaquetteEligible,
+  MEMBER_STATUS_OPTIONS,
+  PLAQUETTE_MIN_PROFILE_COMPLETION,
+} from "@/lib/profile";
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm dark:border-dark_border dark:bg-darkmode dark:text-white";
@@ -91,13 +98,13 @@ export default function AdminUserDetailPage() {
   const isArchived = Boolean(draft.deleted_at);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+    <div className="mx-auto min-w-0 max-w-4xl space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
           <Link href="/admin/users" className="text-sm text-primary hover:underline">
             ← Liste des utilisateurs
           </Link>
-          <h2 className="mt-2 text-2xl font-bold text-midnight_text dark:text-white">
+          <h2 className="mt-2 break-words text-xl font-bold text-midnight_text sm:text-2xl dark:text-white">
             {draft.full_name || draft.email}
           </h2>
           {isArchived && (
@@ -106,19 +113,21 @@ export default function AdminUserDetailPage() {
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           {isArchived ? (
             <button
               type="button"
               onClick={handleRestore}
-              className="rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50">
+              className="w-full rounded-xl border border-emerald-200 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 sm:w-auto"
+            >
               Restaurer
             </button>
           ) : (
             <button
               type="button"
               onClick={handleArchive}
-              className="rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
+              className="w-full rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 sm:w-auto"
+            >
               Archiver
             </button>
           )}
@@ -126,15 +135,16 @@ export default function AdminUserDetailPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white disabled:opacity-60">
+            className="w-full rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60 sm:w-auto"
+          >
             {saving ? "Enregistrement…" : "Enregistrer"}
           </button>
         </div>
       </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-dark_border dark:bg-darklight">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-dark_border dark:bg-darklight">
         <h3 className="mb-4 font-semibold">Compte & publication</h3>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="grid gap-1 text-sm">
             Email
             <input className={inputClass} value={draft.email || ""} onChange={(e) => update("email", e.target.value)} />
@@ -149,13 +159,35 @@ export default function AdminUserDetailPage() {
               <option value="admin">Administrateur</option>
             </select>
           </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={Boolean(draft.onboarding_completed)}
-              onChange={(e) => update("onboarding_completed", e.target.checked)}
-            />
-            Onboarding terminé
+          <label className="grid gap-1 text-sm md:col-span-2">
+            Statut du membre
+            <select
+              className={inputClass}
+              value={draft.statut_membre || ""}
+              onChange={(e) => update("statut_membre", e.target.value)}
+            >
+              <option value="">— Sélectionner —</option>
+              {MEMBER_STATUS_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm md:col-span-2">
+            Situation de cotisation
+            <select
+              className={inputClass}
+              value={draft.situation_cotisations || ""}
+              onChange={(e) => update("situation_cotisations", e.target.value)}
+            >
+              <option value="">— Sélectionner —</option>
+              {COTISATION_SITUATION_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -169,9 +201,9 @@ export default function AdminUserDetailPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-dark_border dark:bg-darklight">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-dark_border dark:bg-darklight">
         <h3 className="mb-4 font-semibold">Identité</h3>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="grid gap-1 text-sm">
             Nom complet
             <input className={inputClass} value={draft.full_name || ""} onChange={(e) => update("full_name", e.target.value)} />
@@ -199,9 +231,9 @@ export default function AdminUserDetailPage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-6 dark:border-dark_border dark:bg-darklight">
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-dark_border dark:bg-darklight">
         <h3 className="mb-4 font-semibold">Scolarité & contact</h3>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="grid gap-1 text-sm">
             Année d’entrée
             <input className={inputClass} value={draft.annee_entree || ""} onChange={(e) => update("annee_entree", e.target.value)} />
@@ -226,10 +258,10 @@ export default function AdminUserDetailPage() {
       </section>
 
       <p className="text-xs text-grey">
-        Complétion : {draft.profile_completion ?? 0}% —{" "}
-        {draft.onboarding_completed && draft.visible_in_plaquette !== false && !isArchived
+        Complétion : {getProfileCompletion(draft)}% —{" "}
+        {!isArchived && isPlaquetteEligible(draft)
           ? "Éligible plaquette"
-          : "Non publié en plaquette"}
+          : `Non publié (min. ${PLAQUETTE_MIN_PROFILE_COMPLETION}% + visible)`}
       </p>
     </div>
   );

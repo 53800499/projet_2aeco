@@ -10,8 +10,7 @@ export default function LayoutShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isStandalone =
-    pathname?.startsWith("/admin") || pathname?.startsWith("/onboarding");
+  const isStandalone = pathname?.startsWith("/admin");
 
   if (isStandalone) {
     return <>{children}</>;
