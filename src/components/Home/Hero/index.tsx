@@ -91,41 +91,44 @@ const Hero = () => {
         {/* RIGHT IMAGE */}
         <div
           className="
-md:col-span-6 col-span-12 relative
-before:absolute before:content-['']
-before:bg-[url('/images/hero/line-leyar.svg')]
-before:bg-no-repeat
-before:left-1/2 before:top-0
-before:h-24 before:w-52
-before:-z-10
-before:translate-x-[70%]
-before:-translate-y-[40%]
-before:brightness-0
-before:saturate-100
-before:[filter:invert(28%)_sepia(76%)_saturate(570%)_hue-rotate(74deg)_brightness(92%)_contrast(91%)]
+  md:col-span-6 col-span-12
+  relative
+  min-h-[280px]
+  sm:min-h-[350px]
+  md:min-h-[500px]
 
-lg:before:inline-block before:hidden
+  before:absolute before:content-['']
+  before:bg-[url('/images/hero/line-leyar.svg')]
+  before:bg-no-repeat
+  before:left-1/2 before:top-0
+  before:h-24 before:w-52
+  before:-z-10
+  before:translate-x-[70%]
+  before:-translate-y-[40%]
+  before:brightness-0
+  before:saturate-100
+  before:[filter:invert(28%)_sepia(76%)_saturate(570%)_hue-rotate(74deg)_brightness(92%)_contrast(91%)]
+  lg:before:inline-block before:hidden
 
-after:absolute after:content-['']
-after:bg-[url('/images/hero/round-leyar.svg')]
-after:bg-no-repeat
-after:left-0 after:bottom-0
-after:h-6.25 after:w-6.25
-after:-z-10
-after:-translate-x-1/2
-after:translate-y-1/2
-after:brightness-0
-after:saturate-100
-after:[filter:invert(28%)_sepia(76%)_saturate(570%)_hue-rotate(74deg)_brightness(92%)_contrast(91%)]
-
-xl:after:inline-block after:hidden
+  after:absolute after:content-['']
+  after:bg-[url('/images/hero/round-leyar.svg')]
+  after:bg-no-repeat
+  after:left-0 after:bottom-0
+  after:h-6.25 after:w-6.25
+  after:-z-10
+  after:-translate-x-1/2
+  after:translate-y-1/2
+  after:brightness-0
+  after:saturate-100
+  after:[filter:invert(28%)_sepia(76%)_saturate(570%)_hue-rotate(74deg)_brightness(92%)_contrast(91%)]
+  xl:after:inline-block after:hidden
 ">
           <Image
             src="/images/hero/hero3.jpg"
-            alt="communauté anciens élèves CEG 2 Ouidah"
+            alt="Communauté anciens élèves CEG 2 Ouidah"
             fill
-            style={{ width: "100%", height: "100%" }}
-            className="rounded-xl"
+            priority
+            className="rounded-xl object-cover"
           />
         </div>
       </div>
