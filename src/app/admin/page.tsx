@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useAdminApi, AdminDashboardStats } from "@/hooks/useAdminApi";
 import { useAuthFeedback } from "@/hooks/useAuthFeedback";
@@ -13,23 +13,59 @@ export default function AdminDashboardPage() {
   const { showError } = useAuthFeedback();
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setStats(await fetchStats());
-      } catch (e) {
-        console.error("admin stats:", e);
-        showError(formatAuthError(e, "Impossible de charger les statistiques. Vérifiez SUPABASE_SERVICE_ROLE_KEY et les migrations SQL."));
-      } finally {
-        setLoading(false);
-      }
-    };
-    void load();
+  const load = useCallback(async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      setStats(await fetchStats());
+    } catch (e) {
+      console.error("admin stats:", e);
+      const msg = formatAuthError(
+        e,
+        "Impossible de charger les statistiques. Vérifiez votre connexion et réessayez."
+      );
+      setErrorMsg(msg);
+      showError(msg);
+    } finally {
+      setLoading(false);
+    }
   }, [fetchStats, showError]);
 
-  if (loading) return <p className="text-grey"><SpinnerScreen /></p>;
-  if (!stats) return <p className="text-grey">Aucune donnée.</p>;
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-grey">
+        <SpinnerScreen />
+        <p className="text-sm">Chargement des statistiques…</p>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950/40">
+        <p className="font-semibold text-amber-900 dark:text-amber-100">
+          Statistiques indisponibles
+        </p>
+        <p className="mt-2 text-sm text-amber-800 dark:text-amber-200/90">
+          {errorMsg ||
+            "La requête a échoué ou a pris trop de temps (connexion mobile lente)."}
+        </p>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="mt-4 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
 
   const o = stats.overview;
 
@@ -79,7 +115,8 @@ export default function AdminDashboardPage() {
         {overviewCards.map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-dark_border dark:bg-darklight">
+            className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-dark_border dark:bg-darklight"
+          >
             <div className={`mb-2 h-1 w-10 rounded-full ${card.accent}`} />
             <p className="text-2xl font-bold text-midnight_text dark:text-white">{card.value}</p>
             <p className="mt-1 text-xs text-grey dark:text-white/60">{card.label}</p>

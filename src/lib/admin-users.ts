@@ -1,6 +1,7 @@
 import {
   getProfileCompletion,
   isPlaquetteEligible,
+  normalizeProfile,
   PLAQUETTE_MIN_PROFILE_COMPLETION,
   ProfileRecord,
   withProfileCompletion,
@@ -62,6 +63,106 @@ export interface PublicStats {
   photoCompletionRate: number;
 }
 
+type DbUserRow = Record<string, unknown> & { id: string };
+
+type ProfileBatchMode = "full" | "light";
+
+const USER_LIST_COLUMNS =
+  "id, email, full_name, first_name, last_name, phone, promo, role, onboarding_completed, visible_in_plaquette, created_at, updated_at, deleted_at, sexe";
+
+const USER_STATS_COLUMNS =
+  "id, email, first_name, last_name, sexe, date_naissance, nationalite, cip_ifu, phone, promo, role, created_at, visible_in_plaquette, deleted_at";
+
+const LINKED_BATCH_SELECT: Record<ProfileBatchMode, Record<string, string>> = {
+  light: {
+    academic:
+      "user_id,annee_entree,annee_sortie,serie_filiere,derniere_classe,diplome_obtenu,promotion_generation",
+    professional: "user_id,profession,fonction_actuelle,employeur_structure,domaine_activite",
+    locations:
+      "user_id,telephone_principal,telephone_secondaire,ville_residence,pays_residence,adresse_complete",
+    amicale:
+      "user_id,date_adhesion_amicale,statut_membre,situation_cotisations,poste_amicale,disponibilite_benevolat",
+    social: "user_id,whatsapp,facebook,linkedin,autres_reseaux",
+    observations: "user_id,competences_particulieres,contribution_possible,besoins_attentes",
+    media: "user_id,photo",
+  },
+  full: {
+    academic: "*",
+    professional: "*",
+    locations: "*",
+    amicale: "*",
+    social: "*",
+    observations: "*",
+    media: "*",
+  },
+};
+
+let adminStatsCache: { data: AdminDashboardStats; at: number } | null = null;
+const ADMIN_STATS_CACHE_MS = 30_000;
+
+export const invalidateAdminStatsCache = () => {
+  adminStatsCache = null;
+};
+
+const indexRowsByUserId = (rows: Array<{ user_id: string } & Record<string, unknown>> | null) => {
+  const map = new Map<string, Record<string, unknown>>();
+  (rows || []).forEach((row) => {
+    if (row.user_id) map.set(row.user_id, row);
+  });
+  return map;
+};
+
+/** Profils liés en 7 requêtes groupées (évite N×8 appels et les timeouts). */
+export const loadProfilesBatch = async (
+  admin: SupabaseClient,
+  users: DbUserRow[],
+  mode: ProfileBatchMode = "full"
+): Promise<Map<string, ProfileRecord>> => {
+  const result = new Map<string, ProfileRecord>();
+  if (users.length === 0) return result;
+
+  const ids = users.map((u) => u.id);
+  const sel = LINKED_BATCH_SELECT[mode];
+
+  const [academic, professional, locations, amicale, social, observations, media] =
+    await Promise.all([
+      admin.from("academic_profiles").select(sel.academic).in("user_id", ids),
+      admin.from("professional_profiles").select(sel.professional).in("user_id", ids),
+      admin.from("locations").select(sel.locations).in("user_id", ids),
+      admin.from("amicale_memberships").select(sel.amicale).in("user_id", ids),
+      admin.from("social_links").select(sel.social).in("user_id", ids),
+      admin.from("observations").select(sel.observations).in("user_id", ids),
+      admin.from("media").select(sel.media).in("user_id", ids),
+    ]);
+
+  type LinkedRow = { user_id: string } & Record<string, unknown>;
+  const asLinked = (rows: unknown) => rows as LinkedRow[] | null;
+
+  const academicMap = indexRowsByUserId(asLinked(academic.data));
+  const professionalMap = indexRowsByUserId(asLinked(professional.data));
+  const locationsMap = indexRowsByUserId(asLinked(locations.data));
+  const amicaleMap = indexRowsByUserId(asLinked(amicale.data));
+  const socialMap = indexRowsByUserId(asLinked(social.data));
+  const observationsMap = indexRowsByUserId(asLinked(observations.data));
+  const mediaMap = indexRowsByUserId(asLinked(media.data));
+
+  users.forEach((u) => {
+    const merged = normalizeProfile({
+      ...(u as ProfileRecord),
+      ...(academicMap.get(u.id) || {}),
+      ...(professionalMap.get(u.id) || {}),
+      ...(locationsMap.get(u.id) || {}),
+      ...(amicaleMap.get(u.id) || {}),
+      ...(socialMap.get(u.id) || {}),
+      ...(observationsMap.get(u.id) || {}),
+      ...(mediaMap.get(u.id) || {}),
+    });
+    result.set(u.id, merged);
+  });
+
+  return result;
+};
+
 export const fetchFullProfile = async (
   admin: SupabaseClient,
   userId: string,
@@ -70,41 +171,21 @@ export const fetchFullProfile = async (
   let userQuery = admin.from("users").select("*").eq("id", userId);
   if (!includeDeleted) userQuery = userQuery.is("deleted_at", null);
 
-  const [userRes, academic, professional, location, amicale, social, observation, media] =
-    await Promise.all([
-      userQuery.maybeSingle(),
-      admin.from("academic_profiles").select("*").eq("user_id", userId).maybeSingle(),
-      admin.from("professional_profiles").select("*").eq("user_id", userId).maybeSingle(),
-      admin.from("locations").select("*").eq("user_id", userId).maybeSingle(),
-      admin.from("amicale_memberships").select("*").eq("user_id", userId).maybeSingle(),
-      admin.from("social_links").select("*").eq("user_id", userId).maybeSingle(),
-      admin.from("observations").select("*").eq("user_id", userId).maybeSingle(),
-      admin.from("media").select("*").eq("user_id", userId).maybeSingle(),
-    ]);
+  const { data: userRow, error } = await userQuery.maybeSingle();
+  if (error) throw error;
+  if (!userRow) return null;
 
-  if (!userRes.data) return null;
-
-  const merged: ProfileRecord = {
-    ...userRes.data,
-    ...(academic.data || {}),
-    ...(professional.data || {}),
-    ...(location.data || {}),
-    ...(amicale.data || {}),
-    ...(social.data || {}),
-    ...(observation.data || {}),
-    ...(media.data || {}),
-  };
-
-  return withProfileCompletion(merged);
+  const profileMap = await loadProfilesBatch(admin, [userRow as DbUserRow], "full");
+  const merged = profileMap.get(userId);
+  return merged ? withProfileCompletion(merged) : null;
 };
 
-const mapUserRow = async (
-  admin: SupabaseClient,
-  u: Record<string, unknown>
-): Promise<AdminUserRow> => {
+const mapUserRowFromProfile = (
+  u: Record<string, unknown>,
+  profile: ProfileRecord | undefined
+): AdminUserRow => {
   const id = u.id as string;
-  const fullProfile = await fetchFullProfile(admin, id);
-  const merged = fullProfile ?? (u as ProfileRecord);
+  const merged = profile ?? normalizeProfile(u);
 
   return {
     id,
@@ -126,6 +207,8 @@ const mapUserRow = async (
   };
 };
 
+const escapeIlike = (term: string) => term.replace(/[%_\\]/g, " ").trim();
+
 export const listUsersForAdmin = async (
   admin: SupabaseClient,
   options: {
@@ -138,40 +221,41 @@ export const listUsersForAdmin = async (
   const page = options.page ?? 1;
   const limit = Math.min(options.limit ?? 20, 100);
   const status = options.status ?? "active";
+  const searchTerm = escapeIlike(options.search || "").toLowerCase();
 
-  const { data: usersRaw, error } = await admin
-    .from("users")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-
-  const searchTerm = options.search?.trim().toLowerCase();
-  let users = usersRaw || [];
+  let query = admin.from("users").select(USER_LIST_COLUMNS, { count: "exact" });
 
   if (status === "active") {
-    users = users.filter((u) => !u.deleted_at);
+    query = query.is("deleted_at", null);
   } else if (status === "deleted") {
-    users = users.filter((u) => Boolean(u.deleted_at));
+    query = query.not("deleted_at", "is", null);
   }
 
   if (searchTerm) {
-    users = users.filter(
-      (u) =>
-        u.email?.toLowerCase().includes(searchTerm) ||
-        u.full_name?.toLowerCase().includes(searchTerm) ||
-        u.phone?.toLowerCase().includes(searchTerm) ||
-        u.promo?.toLowerCase().includes(searchTerm)
+    const pattern = `%${searchTerm}%`;
+    query = query.or(
+      `email.ilike.${pattern},full_name.ilike.${pattern},phone.ilike.${pattern},promo.ilike.${pattern}`
     );
   }
 
-  const total = users.length;
   const from = (page - 1) * limit;
-  const paged = users.slice(from, from + limit);
+  const to = from + limit - 1;
 
-  const rows = await Promise.all(paged.map((u) => mapUserRow(admin, u)));
+  const { data: paged, count, error } = await query
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-  return { users: rows, total, page, limit };
+  if (error) throw error;
+
+  const rows = (paged || []) as DbUserRow[];
+  const profileMap = await loadProfilesBatch(admin, rows, "light");
+
+  return {
+    users: rows.map((u) => mapUserRowFromProfile(u, profileMap.get(u.id))),
+    total: count ?? 0,
+    page,
+    limit,
+  };
 };
 
 export const softDeleteUser = async (admin: SupabaseClient, userId: string) => {
@@ -184,6 +268,7 @@ export const softDeleteUser = async (admin: SupabaseClient, userId: string) => {
     })
     .eq("id", userId);
   if (error) throw error;
+  invalidateAdminStatsCache();
 };
 
 export const restoreUser = async (admin: SupabaseClient, userId: string) => {
@@ -195,6 +280,7 @@ export const restoreUser = async (admin: SupabaseClient, userId: string) => {
     })
     .eq("id", userId);
   if (error) throw error;
+  invalidateAdminStatsCache();
 };
 
 export const createUserForAdmin = async (
@@ -240,6 +326,7 @@ export const createUserForAdmin = async (
   });
 
   if (profileError) throw profileError;
+  invalidateAdminStatsCache();
   return fetchFullProfile(admin, authData.user.id);
 };
 
@@ -249,16 +336,19 @@ export const getPlaquetteMembers = async (
 ): Promise<PlaquetteMember[]> => {
   const { data, error } = await admin
     .from("users")
-    .select("id")
+    .select("id, visible_in_plaquette, deleted_at")
     .is("deleted_at", null)
     .eq("visible_in_plaquette", true);
 
   if (error) throw error;
 
+  const rows = (data || []) as DbUserRow[];
+  const profileMap = await loadProfilesBatch(admin, rows);
+
   const members: PlaquetteMember[] = [];
 
-  for (const row of data || []) {
-    const profile = await fetchFullProfile(admin, row.id);
+  for (const row of rows) {
+    const profile = profileMap.get(row.id);
     if (!profile) continue;
     if (!isPlaquetteEligible(profile)) continue;
     if (promoFilter === "__none__" && profile.promo?.trim()) continue;
@@ -345,7 +435,17 @@ export const getPublicStats = async (admin: SupabaseClient): Promise<PublicStats
 };
 
 export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboardStats> => {
-  const { data: allUsers, error } = await admin.from("users").select("*");
+  if (adminStatsCache && Date.now() - adminStatsCache.at < ADMIN_STATS_CACHE_MS) {
+    return adminStatsCache.data;
+  }
+
+  const stats = await computeAdminStats(admin);
+  adminStatsCache = { data: stats, at: Date.now() };
+  return stats;
+};
+
+const computeAdminStats = async (admin: SupabaseClient): Promise<AdminDashboardStats> => {
+  const { data: allUsers, error } = await admin.from("users").select(USER_STATS_COLUMNS);
 
   if (error) {
     throw new Error(`Lecture des utilisateurs impossible : ${error.message}`);
@@ -390,19 +490,20 @@ export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboa
     }
   });
 
-  const completionByUser = await Promise.all(
-    active.map(async (u) => {
-      try {
-        const p = await fetchFullProfile(admin, u.id);
-        return p ? getProfileCompletion(p) : 0;
-      } catch {
-        return 0;
-      }
-    })
+  const profileMap = await loadProfilesBatch(admin, active as DbUserRow[], "light");
+  const completionByUser = active.map((u) =>
+    getProfileCompletion(profileMap.get(u.id as string) ?? normalizeProfile(u))
   );
 
   completionByUser.forEach((pct) => {
     byCompletion[completionBucket(pct)] += 1;
+  });
+
+  profileMap.forEach((profile) => {
+    const statutKey = profile.statut_membre?.trim() || "Non renseigné";
+    byStatutMembre[statutKey] = (byStatutMembre[statutKey] || 0) + 1;
+    const cotKey = profile.situation_cotisations?.trim() || "Non renseigné";
+    byCotisation[cotKey] = (byCotisation[cotKey] || 0) + 1;
   });
 
   const profileComplete100 = completionByUser.filter((p) => p >= 100).length;
@@ -411,21 +512,6 @@ export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboa
       u.visible_in_plaquette !== false &&
       (completionByUser[i] ?? 0) >= PLAQUETTE_MIN_PROFILE_COMPLETION
   ).length;
-
-  const activeIds = active.map((u) => u.id);
-  if (activeIds.length > 0) {
-    const { data: amicales } = await admin
-      .from("amicale_memberships")
-      .select("statut_membre, situation_cotisations")
-      .in("user_id", activeIds);
-
-    (amicales || []).forEach((a) => {
-      const statutKey = a.statut_membre?.trim() || "Non renseigné";
-      byStatutMembre[statutKey] = (byStatutMembre[statutKey] || 0) + 1;
-      const cotKey = a.situation_cotisations?.trim() || "Non renseigné";
-      byCotisation[cotKey] = (byCotisation[cotKey] || 0) + 1;
-    });
-  }
 
   const avgCompletion =
     completionByUser.length > 0

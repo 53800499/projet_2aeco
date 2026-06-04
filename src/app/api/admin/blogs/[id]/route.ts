@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { normalizeBlogInput } from "@/lib/blogs";
+export const maxDuration = 60;
 
 type RouteContext = { params: Promise<{ id: string }> };
 

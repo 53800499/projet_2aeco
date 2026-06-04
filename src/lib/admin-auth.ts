@@ -41,7 +41,7 @@ export async function requireAdmin(request: Request) {
     const admin = getSupabaseAdmin();
     const { data: profile, error: profileError } = await admin
       .from("users")
-      .select("*")
+      .select("id, role, email")
       .eq("id", user.id)
       .maybeSingle();
 

@@ -2,9 +2,12 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import {
   fetchFullProfile,
+  invalidateAdminStatsCache,
   softDeleteUser,
 } from "@/lib/admin-users";
 import { normalizeProfileForSave, ProfileRecord } from "@/lib/profile";
+
+export const maxDuration = 60;
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -39,43 +42,67 @@ export async function PATCH(request: Request, context: RouteContext) {
   try {
     const normalized = normalizeProfileForSave({ ...body, id });
     const timestamp = new Date().toISOString();
+    const { admin } = auth;
 
-    const { error: userError } = await auth.admin.from("users").update({
-      email: normalized.email,
-      full_name: normalized.full_name,
-      first_name: normalized.first_name,
-      last_name: normalized.last_name,
-      sexe: normalized.sexe,
-      date_naissance: normalized.date_naissance || null,
-      nationalite: normalized.nationalite,
-      phone: normalized.phone,
-      promo: normalized.promo,
-      email_secondaire: normalized.email_secondaire,
-      onboarding_completed: Boolean(normalized.onboarding_completed),
-      visible_in_plaquette: body.visible_in_plaquette !== false,
-      role: body.role === "admin" ? "admin" : "member",
-      updated_at: timestamp,
-    }).eq("id", id);
+    const { error: userError } = await admin
+      .from("users")
+      .update({
+        email: normalized.email,
+        full_name: normalized.full_name,
+        first_name: normalized.first_name,
+        last_name: normalized.last_name,
+        sexe: normalized.sexe,
+        date_naissance: normalized.date_naissance || null,
+        nationalite: normalized.nationalite,
+        cip_ifu: normalized.cip_ifu,
+        phone: normalized.phone,
+        promo: normalized.promo,
+        email_secondaire: normalized.email_secondaire,
+        onboarding_completed: Boolean(normalized.onboarding_completed),
+        visible_in_plaquette: body.visible_in_plaquette !== false,
+        role: body.role === "admin" ? "admin" : "member",
+        updated_at: timestamp,
+      })
+      .eq("id", id);
 
     if (userError) throw userError;
 
-    const upsertLinked = async (table: string, payload: Record<string, unknown>) => {
-      const { data: existing } = await auth.admin
-        .from(table)
-        .select("id")
-        .eq("user_id", id)
-        .maybeSingle();
+    const upsertLinked = (table: string, payload: Record<string, unknown>) =>
+      admin.from(table).upsert(
+        {
+          user_id: id,
+          ...payload,
+          created_at: timestamp,
+          updated_at: timestamp,
+        },
+        { onConflict: "user_id" }
+      );
 
-      if (existing?.id) {
-        return auth.admin.from(table).update({ ...payload, updated_at: timestamp }).eq("id", existing.id);
-      }
-      return auth.admin.from(table).insert({
-        ...payload,
-        user_id: id,
-        created_at: timestamp,
-        updated_at: timestamp,
-      });
-    };
+    const { data: existingMedia } = await admin
+      .from("media")
+      .select("id")
+      .eq("user_id", id)
+      .limit(1)
+      .maybeSingle();
+
+    const mediaWrite = existingMedia?.id
+      ? admin
+          .from("media")
+          .update({
+            photo: normalized.photo,
+            document_url: normalized.document_url,
+            media_type: normalized.media_type || "photo",
+            updated_at: timestamp,
+          })
+          .eq("id", existingMedia.id)
+      : admin.from("media").insert({
+          user_id: id,
+          photo: normalized.photo,
+          document_url: normalized.document_url,
+          media_type: normalized.media_type || "photo",
+          created_at: timestamp,
+          updated_at: timestamp,
+        });
 
     await Promise.all([
       upsertLinked("academic_profiles", {
@@ -99,20 +126,29 @@ export async function PATCH(request: Request, context: RouteContext) {
         pays_residence: normalized.pays_residence,
         adresse_complete: normalized.adresse_complete,
       }),
+      upsertLinked("amicale_memberships", {
+        date_adhesion_amicale: normalized.date_adhesion_amicale,
+        statut_membre: normalized.statut_membre,
+        situation_cotisations: normalized.situation_cotisations,
+        poste_amicale: normalized.poste_amicale,
+        disponibilite_benevolat: normalized.disponibilite_benevolat,
+      }),
       upsertLinked("social_links", {
         whatsapp: normalized.whatsapp,
         facebook: normalized.facebook,
         linkedin: normalized.linkedin,
         autres_reseaux: normalized.autres_reseaux,
       }),
-      upsertLinked("media", {
-        photo: normalized.photo,
-        document_url: normalized.document_url,
-        media_type: normalized.media_type || "photo",
+      upsertLinked("observations", {
+        competences_particulieres: normalized.competences_particulieres,
+        contribution_possible: normalized.contribution_possible,
+        besoins_attentes: normalized.besoins_attentes,
       }),
+      mediaWrite,
     ]);
 
-    const profile = await fetchFullProfile(auth.admin, id, true);
+    invalidateAdminStatsCache();
+    const profile = await fetchFullProfile(admin, id, true);
     return NextResponse.json({ profile });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Erreur serveur.";

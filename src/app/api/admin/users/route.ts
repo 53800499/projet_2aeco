@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createUserForAdmin, listUsersForAdmin, UserListStatus } from "@/lib/admin-users";
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const auth = await requireAdmin(request);
