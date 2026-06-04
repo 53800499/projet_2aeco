@@ -96,6 +96,28 @@ export const PROFILE_COMPLETION_FIELD_KEYS = [
   "besoins_attentes",
 ] as const satisfies readonly (keyof ProfileRecord)[];
 
+/**
+ * Colonnes `users` à charger pour que le % soit identique au profil connecté (site public).
+ * Ne pas réduire cette liste dans le back-office (batch « light »).
+ */
+export const USER_SELECT_FOR_PROFILE_COMPLETION =
+  "id, email, full_name, first_name, last_name, sexe, date_naissance, nationalite, cip_ifu, phone, promo, role, onboarding_completed, visible_in_plaquette, created_at, updated_at, deleted_at";
+
+/** Colonnes des tables liées — toutes les clés utilisées par PROFILE_COMPLETION_FIELD_KEYS */
+export const LINKED_SELECT_FOR_PROFILE_COMPLETION = {
+  academic_profiles:
+    "user_id,annee_entree,annee_sortie,serie_filiere,derniere_classe,diplome_obtenu,promotion_generation",
+  professional_profiles:
+    "user_id,profession,fonction_actuelle,employeur_structure,domaine_activite",
+  locations:
+    "user_id,telephone_principal,telephone_secondaire,ville_residence,pays_residence,adresse_complete",
+  amicale_memberships:
+    "user_id,date_adhesion_amicale,statut_membre,situation_cotisations,poste_amicale,disponibilite_benevolat",
+  social_links: "user_id,whatsapp,facebook,linkedin,autres_reseaux",
+  observations: "user_id,competences_particulieres,contribution_possible,besoins_attentes",
+  media: "user_id,photo",
+} as const;
+
 export const COTISATION_SITUATION_OPTIONS = ["Ajout", "Non ajout"] as const;
 export const MEMBER_STATUS_OPTIONS = ["Actif", "Sympathisant", "Honoraire"] as const;
 
@@ -213,13 +235,17 @@ export const normalizeProfileForSave = (profile: ProfileRecord): ProfileRecord =
   };
 };
 
-const getFieldValue = (profile: ProfileRecord, key: keyof ProfileRecord): unknown => {
-  if (key === "first_name" || key === "last_name") {
-    const n = normalizeProfile(profile);
-    return key === "first_name" ? n.first_name : n.last_name;
-  }
-  return profile[key];
+/** Valeur d’un champ après normalisation (alias phone → telephone_principal, promo → promotion_generation, etc.) */
+export const getProfileFieldValue = (
+  profile: Partial<ProfileRecord>,
+  key: ProfileCompletionFieldKey
+): unknown => {
+  const normalized = normalizeProfile(profile);
+  return normalized[key];
 };
+
+const getFieldValue = (profile: ProfileRecord, key: keyof ProfileRecord): unknown =>
+  getProfileFieldValue(profile, key as ProfileCompletionFieldKey);
 
 /** % sur une liste de champs (même logique que le profil global) */
 export const getFieldsCompletionPercent = (

@@ -1,9 +1,11 @@
 import {
   getProfileCompletion,
   isPlaquetteEligible,
+  LINKED_SELECT_FOR_PROFILE_COMPLETION,
   normalizeProfile,
   PLAQUETTE_MIN_PROFILE_COMPLETION,
   ProfileRecord,
+  USER_SELECT_FOR_PROFILE_COMPLETION,
   withProfileCompletion,
 } from "@/lib/profile";
 import { PlaquetteMember } from "@/lib/plaquette";
@@ -65,33 +67,16 @@ export interface PublicStats {
 
 type DbUserRow = Record<string, unknown> & { id: string };
 
-type ProfileBatchMode = "full" | "light";
-
-const USER_LIST_COLUMNS =
-  "id, email, full_name, first_name, last_name, phone, promo, role, onboarding_completed, visible_in_plaquette, created_at, updated_at, deleted_at, sexe";
-
-const USER_STATS_COLUMNS =
-  "id, email, first_name, last_name, sexe, date_naissance, nationalite, cip_ifu, phone, promo, role, created_at, visible_in_plaquette, deleted_at";
+type ProfileBatchMode = "completion" | "full";
 
 const LINKED_BATCH_SELECT: Record<ProfileBatchMode, Record<string, string>> = {
-  light: {
-    academic:
-      "user_id,annee_entree,annee_sortie,serie_filiere,derniere_classe,diplome_obtenu,promotion_generation",
-    professional: "user_id,profession,fonction_actuelle,employeur_structure,domaine_activite",
-    locations:
-      "user_id,telephone_principal,telephone_secondaire,ville_residence,pays_residence,adresse_complete",
-    amicale:
-      "user_id,date_adhesion_amicale,statut_membre,situation_cotisations,poste_amicale,disponibilite_benevolat",
-    social: "user_id,whatsapp,facebook,linkedin,autres_reseaux",
-    observations: "user_id,competences_particulieres,contribution_possible,besoins_attentes",
-    media: "user_id,photo",
-  },
+  completion: { ...LINKED_SELECT_FOR_PROFILE_COMPLETION },
   full: {
-    academic: "*",
-    professional: "*",
+    academic_profiles: "*",
+    professional_profiles: "*",
     locations: "*",
-    amicale: "*",
-    social: "*",
+    amicale_memberships: "*",
+    social_links: "*",
     observations: "*",
     media: "*",
   },
@@ -126,11 +111,11 @@ export const loadProfilesBatch = async (
 
   const [academic, professional, locations, amicale, social, observations, media] =
     await Promise.all([
-      admin.from("academic_profiles").select(sel.academic).in("user_id", ids),
-      admin.from("professional_profiles").select(sel.professional).in("user_id", ids),
+      admin.from("academic_profiles").select(sel.academic_profiles).in("user_id", ids),
+      admin.from("professional_profiles").select(sel.professional_profiles).in("user_id", ids),
       admin.from("locations").select(sel.locations).in("user_id", ids),
-      admin.from("amicale_memberships").select(sel.amicale).in("user_id", ids),
-      admin.from("social_links").select(sel.social).in("user_id", ids),
+      admin.from("amicale_memberships").select(sel.amicale_memberships).in("user_id", ids),
+      admin.from("social_links").select(sel.social_links).in("user_id", ids),
       admin.from("observations").select(sel.observations).in("user_id", ids),
       admin.from("media").select(sel.media).in("user_id", ids),
     ]);
@@ -223,7 +208,7 @@ export const listUsersForAdmin = async (
   const status = options.status ?? "active";
   const searchTerm = escapeIlike(options.search || "").toLowerCase();
 
-  let query = admin.from("users").select(USER_LIST_COLUMNS, { count: "exact" });
+  let query = admin.from("users").select(USER_SELECT_FOR_PROFILE_COMPLETION, { count: "exact" });
 
   if (status === "active") {
     query = query.is("deleted_at", null);
@@ -248,7 +233,7 @@ export const listUsersForAdmin = async (
   if (error) throw error;
 
   const rows = (paged || []) as DbUserRow[];
-  const profileMap = await loadProfilesBatch(admin, rows, "light");
+  const profileMap = await loadProfilesBatch(admin, rows, "completion");
 
   return {
     users: rows.map((u) => mapUserRowFromProfile(u, profileMap.get(u.id))),
@@ -336,14 +321,14 @@ export const getPlaquetteMembers = async (
 ): Promise<PlaquetteMember[]> => {
   const { data, error } = await admin
     .from("users")
-    .select("id, visible_in_plaquette, deleted_at")
+    .select(USER_SELECT_FOR_PROFILE_COMPLETION)
     .is("deleted_at", null)
     .eq("visible_in_plaquette", true);
 
   if (error) throw error;
 
   const rows = (data || []) as DbUserRow[];
-  const profileMap = await loadProfilesBatch(admin, rows);
+  const profileMap = await loadProfilesBatch(admin, rows, "completion");
 
   const members: PlaquetteMember[] = [];
 
@@ -445,7 +430,9 @@ export const getAdminStats = async (admin: SupabaseClient): Promise<AdminDashboa
 };
 
 const computeAdminStats = async (admin: SupabaseClient): Promise<AdminDashboardStats> => {
-  const { data: allUsers, error } = await admin.from("users").select(USER_STATS_COLUMNS);
+  const { data: allUsers, error } = await admin
+    .from("users")
+    .select(USER_SELECT_FOR_PROFILE_COMPLETION);
 
   if (error) {
     throw new Error(`Lecture des utilisateurs impossible : ${error.message}`);
@@ -490,7 +477,7 @@ const computeAdminStats = async (admin: SupabaseClient): Promise<AdminDashboardS
     }
   });
 
-  const profileMap = await loadProfilesBatch(admin, active as DbUserRow[], "light");
+  const profileMap = await loadProfilesBatch(admin, active as DbUserRow[], "completion");
   const completionByUser = active.map((u) =>
     getProfileCompletion(profileMap.get(u.id as string) ?? normalizeProfile(u))
   );
