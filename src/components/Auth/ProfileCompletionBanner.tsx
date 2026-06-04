@@ -45,15 +45,15 @@ export default function ProfileCompletionBanner({
               Complétez votre profil pour le répertoire
             </h3>
             <p className="mt-1 text-sm text-amber-900/80 dark:text-amber-100/80">
-              Les champs manquants sont listés ci-dessous. Cliquez sur un libellé
-              pour accéder directement au formulaire.
+              Les champs manquants sont listés ci-dessous. Cliquez sur un
+              libellé pour accéder directement au formulaire.
             </p>
           </div>
 
           <ProfileMissingFieldsAlert
             profile={profile}
             percent={percent}
-            className="border-amber-300 bg-white/80 dark:border-amber-600/40 dark:bg-darkmode/80"
+            className="hidden md:block border-amber-300 bg-white/80 dark:border-amber-600/40 dark:bg-darkmode/80"
           />
 
           <div>
@@ -71,8 +71,7 @@ export default function ProfileCompletionBanner({
 
           <Link
             href="/profile"
-            className="inline-flex items-center justify-center rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
-          >
+            className="inline-flex items-center justify-center rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700">
             Mettre à jour mon profil
           </Link>
         </div>
@@ -81,8 +80,7 @@ export default function ProfileCompletionBanner({
           type="button"
           onClick={handleClose}
           className="rounded-md p-2 text-amber-700 transition hover:bg-amber-200/80 dark:text-amber-300 dark:hover:bg-amber-900/50"
-          aria-label="Fermer"
-        >
+          aria-label="Fermer">
           <X size={18} />
         </button>
       </div>

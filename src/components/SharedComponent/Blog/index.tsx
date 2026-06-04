@@ -46,7 +46,7 @@ const Blog: React.FC = () => {
       id="news">
       <div className="container mx-auto max-w-6xl">
         {/* HEADER */}
-        <div className="flex items-baseline justify-between flex-wrap">
+        <div className="flex items-baseline justify-between flex-wrap mx-auto max-w-6xl px-4 pt-16 pb-10">
           <h2
             className="sm:mb-11 mb-3 text-4xl font-bold text-midnight_text dark:text-white"
             data-aos="fade-right"
