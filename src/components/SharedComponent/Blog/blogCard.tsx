@@ -9,7 +9,7 @@ const BlogCard = ({ blog }: { blog: Blog }) => {
   const { title, coverImage, excerpt, date, slug } = blog;
 
   return (
-    <div className="group relative">
+    <div className="group relative mx-2 sm:mx-0 bg-white rounded-md shadow-md p-4 flex flex-col h-full dark:bg-darkmode">
       {/* IMAGE */}
       <div className="mb-6 overflow-hidden rounded-sm aspect-[4/4] relative">
         <Link
