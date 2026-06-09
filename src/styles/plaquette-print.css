@@ -1,0 +1,219 @@
+/**
+ * Plaquette CEG 2 Ouidah — styles d'impression / export PDF navigateur.
+ * Mise en page fixe A4, indépendante du viewport écran.
+ */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm 12mm;
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #13241d !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Masquer tout sauf le document plaquette */
+  body * {
+    visibility: hidden;
+  }
+
+  .plaquette-document,
+  .plaquette-document * {
+    visibility: visible;
+  }
+
+  .plaquette-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    color: #13241d;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 9.5pt;
+    line-height: 1.35;
+  }
+
+  .plaquette-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* Couverture */
+  .plaquette-cover {
+    text-align: center;
+    padding: 0 0 10mm;
+    margin: 0 0 8mm;
+    border-bottom: 1.5pt solid #207226;
+    page-break-after: avoid;
+  }
+
+  .plaquette-cover__org {
+    margin: 0;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #207226;
+  }
+
+  .plaquette-cover__title {
+    margin: 4mm 0 0;
+    font-size: 22pt;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #13241d;
+  }
+
+  .plaquette-cover__subtitle {
+    margin: 4mm auto 0;
+    max-width: 140mm;
+    font-size: 10pt;
+    color: #70877a;
+  }
+
+  .plaquette-cover__meta {
+    margin: 3mm 0 0;
+    font-size: 8pt;
+    color: #70877a;
+  }
+
+  /* Grille fixe 2 colonnes — format A4 */
+  .plaquette-members {
+    margin: 0;
+    padding: 0;
+  }
+
+  .plaquette-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 5mm !important;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .plaquette-grid > li {
+    margin: 0;
+    padding: 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Fiche membre */
+  .plaquette-card {
+    display: block;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 0.5pt solid #d9e5de;
+    border-radius: 3mm;
+    padding: 4mm;
+    background: #ffffff;
+    box-shadow: none !important;
+  }
+
+  .plaquette-card__header {
+    display: flex;
+    gap: 3mm;
+    align-items: flex-start;
+  }
+
+  .plaquette-card__photo {
+    flex-shrink: 0;
+    width: 18mm;
+    height: 18mm;
+    overflow: hidden;
+    border-radius: 2mm;
+    background: #f2f7f7;
+    border: 0.5pt solid #d9e5de;
+  }
+
+  .plaquette-card__photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .plaquette-card__initial {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    font-size: 14pt;
+    font-weight: 700;
+    color: #207226;
+  }
+
+  .plaquette-card__identity {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .plaquette-card__name {
+    margin: 0;
+    font-size: 11pt;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #13241d;
+  }
+
+  .plaquette-card__promo {
+    margin: 1mm 0 0;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #207226;
+  }
+
+  .plaquette-card__job {
+    margin: 1.5mm 0 0;
+    font-size: 8.5pt;
+    font-weight: 600;
+    color: #13241d;
+  }
+
+  .plaquette-card__employer {
+    margin: 0.5mm 0 0;
+    font-size: 8pt;
+    color: #70877a;
+  }
+
+  .plaquette-card__details {
+    margin: 3mm 0 0;
+    padding: 0;
+    font-size: 8pt;
+    color: #70877a;
+  }
+
+  .plaquette-card__detail {
+    display: flex;
+    gap: 2mm;
+    margin: 0 0 1mm;
+  }
+
+  .plaquette-card__detail dt {
+    flex-shrink: 0;
+    margin: 0;
+    font-weight: 600;
+    color: #13241d;
+  }
+
+  .plaquette-card__detail dd {
+    margin: 0;
+  }
+}

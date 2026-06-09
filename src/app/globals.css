@@ -155,30 +155,9 @@ body {
   @apply mb-6 text-2xl font-bold dark:text-white sm:text-[28px] sm:leading-[40px];
 }
 
-/* Plaquette numérique — impression */
+/* Plaquette — styles d'impression : voir src/styles/plaquette-print.css */
 @media print {
   .plaquette-no-print {
     display: none !important;
   }
-
-  .plaquette-section {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
-  .plaquette-card {
-    break-inside: avoid;
-    box-shadow: none !important;
-    border: 1px solid #0f2f2d !important;
-  }
-
-  body {
-    background: white !important;
-  }
-}
-
-/* Export PDF (html2pdf) — éviter les coupures de fiches */
-.plaquette-pdf-root .plaquette-card {
-  break-inside: avoid;
-  page-break-inside: avoid;
 }
