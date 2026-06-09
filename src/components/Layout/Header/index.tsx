@@ -1,32 +1,34 @@
-'use client'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useContext, useEffect, useRef, useState } from 'react'
-import { headerData } from '../Header/Navigation/menuData'
-import Logo from './Logo'
-import HeaderLink from '../Header/Navigation/HeaderLink'
+/** @format */
+
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useContext, useEffect, useRef, useState } from "react";
+import { headerData } from "../Header/Navigation/menuData";
+import Logo from "./Logo";
+import HeaderLink from "../Header/Navigation/HeaderLink";
 import MobileHeaderLink from "../Header/Navigation/MobileHeaderLink";
-import { useTheme } from 'next-themes'
+import { useTheme } from "next-themes";
 // import { Icon } from '@iconify/react/dist/iconify.js'
-import { AuthFeedback } from '@/components/Auth/AuthDialog/AuthFeedback'
-import AuthDialogContext from '@/app/context/AuthDialogContext'
-import { useAuthProfile } from '@/app/context/AuthProfileContext'
+import { AuthFeedback } from "@/components/Auth/AuthDialog/AuthFeedback";
+import AuthDialogContext from "@/app/context/AuthDialogContext";
+import { useAuthProfile } from "@/app/context/AuthProfileContext";
 import { useAuthModal } from "@/app/context/AuthModalContext";
-import { useIsAdmin } from '@/hooks/useAdminApi';
-import ProfileCompletionBanner from '@/components/Auth/ProfileCompletionBanner'
+import { useIsAdmin } from "@/hooks/useAdminApi";
+import ProfileCompletionBanner from "@/components/Auth/ProfileCompletionBanner";
 
 const Header: React.FC = () => {
-  const pathUrl = usePathname()
-  const { theme, setTheme } = useTheme()
+  const pathUrl = usePathname();
+  const { theme, setTheme } = useTheme();
 
-  const [navbarOpen, setNavbarOpen] = useState(false)
+  const [navbarOpen, setNavbarOpen] = useState(false);
   const [closed, setClosed] = useState(false);
   const [sticky, setSticky] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = () => {
-    setSticky(window.scrollY >= 80)
-  }
+    setSticky(window.scrollY >= 80);
+  };
 
   const handleClickOutside = (event: MouseEvent) => {
     if (
@@ -36,7 +38,7 @@ const Header: React.FC = () => {
     ) {
       setNavbarOpen(false);
     }
-  }
+  };
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
@@ -49,25 +51,25 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     if (navbarOpen) {
-      document.body.style.overflow = 'hidden'
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = ''
+      document.body.style.overflow = "";
     }
-  }, [navbarOpen])
+  }, [navbarOpen]);
 
-  const authDialog = useContext(AuthDialogContext)
-  const { user, profile } = useAuthProfile()
+  const authDialog = useContext(AuthDialogContext);
+  const { user, profile } = useAuthProfile();
   const { openSignIn, openSignUp } = useAuthModal();
   const isAdmin = useIsAdmin(profile);
 
   return (
     <header
-      className={`fixed h-24 top-0 z-50 w-full dark:bg-transparent transition-all ${
+      className={`fixed h-24 top-0 z-50 w-full dark:bg-transparent transition-all items-center`}>
+      <div className={`container mx-auto max-w-6xl flex items-center justify-between px-6 py-4 ${
         sticky ?
           "shadow-lg bg-white dark:shadow-dark-md dark:bg-darklight!"
         : "shadow-none"
       }`}>
-      <div className="container mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
         <Link href="/">
           <Logo />
         </Link>
@@ -228,6 +230,6 @@ const Header: React.FC = () => {
       )}
     </header>
   );
-}
+};
 
-export default Header
+export default Header;
