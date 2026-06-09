@@ -62,12 +62,12 @@ const Header: React.FC = () => {
 
   return (
     <header
-      className={`fixed h-24 top-0 py-1 z-50 w-full dark:bg-transparent transition-all ${
+      className={`fixed h-24 top-0 z-50 w-full dark:bg-transparent transition-all flex items-center ${
         sticky ?
           "shadow-lg bg-white dark:shadow-dark-md dark:bg-darklight!"
         : "shadow-none"
       }`}>
-      <div className="container mx-auto max-w-6xl flex items-center justify-between p-6">
+      <div className="container mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
         <Link href="/">
           <Logo />
         </Link>
@@ -103,7 +103,7 @@ const Header: React.FC = () => {
             <>
               <button
                 type="button"
-                className="hidden lg:block bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-green-600 hover:text-white"
+                className="hidden lg:block bg-transparent border border-primary text-primary px-4 py-2 rounded-lg hover:bg-primary hover:text-white"
                 onClick={openSignIn}>
                 Connectez-vous
               </button>

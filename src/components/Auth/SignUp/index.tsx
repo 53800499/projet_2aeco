@@ -9,6 +9,7 @@ import Logo from "@/components/Layout/Header/Logo";
 import { useAuthProfile } from "@/app/context/AuthProfileContext";
 import { useAuthFeedback } from "@/hooks/useAuthFeedback";
 import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
+import { Eye, EyeOff } from "lucide-react";
 
 const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
   const { signUp } = useAuthProfile();
   const { showSuccess, showError } = useAuthFeedback();
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,14 +27,17 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
 
     try {
       const data = new FormData(e.currentTarget);
-      const value = Object.fromEntries(data.entries()) as Record<string, string>;
+      const value = Object.fromEntries(data.entries()) as Record<
+        string,
+        string
+      >;
 
       const result = await signUp({
         email: value.email,
         password: value.password,
         full_name: value.name,
         phone: value.phone,
-        promo: value.promo,
+        promo: value.promo
       });
 
       signUpOpen?.(false);
@@ -85,7 +90,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
             name="name"
             required
             placeholder="Nom complet"
-            className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+            className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
           />
         </div>
 
@@ -95,7 +100,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
             name="email"
             required
             placeholder="Adresse email"
-            className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+            className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
           />
         </div>
 
@@ -105,7 +110,7 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
             name="phone"
             required
             placeholder="Numéro WhatsApp"
-            className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+            className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
           />
         </div>
 
@@ -115,18 +120,28 @@ const SignUp = ({ signUpOpen }: { signUpOpen?: (open: boolean) => void }) => {
             name="promo"
             required
             placeholder="Année ou promotion (ex: 2018-2019)"
-            className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+            className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             name="password"
             required
             placeholder="Mot de passe"
-            className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+            className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
           />
+
+          {/* bouton toggle */}
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+            {showPassword ?
+              <EyeOff size={20} />
+            : <Eye size={20} />}
+          </button>
         </div>
 
         <button

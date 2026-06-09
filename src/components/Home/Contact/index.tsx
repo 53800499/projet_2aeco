@@ -10,6 +10,7 @@ import { useAuthFeedback } from "@/hooks/useAuthFeedback";
 import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
 import Loader from "@/components/Common/Loader";
 import { associationObjectives } from "@/app/api/data";
+import { Eye, EyeOff } from "lucide-react";
 
 const Contactform = () => {
   const router = useRouter();
@@ -18,6 +19,7 @@ const Contactform = () => {
   const { user, signUp } = useAuthProfile();
   const { openSignIn } = useAuthModal();
   const { showSuccess, showError } = useAuthFeedback();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,8 +64,7 @@ const Contactform = () => {
   return (
     <section
       className="overflow-x-hidden bg-darkmode dark:bg-darklight"
-      id="inscription"
-    >
+      id="inscription">
       <div className="container mx-auto max-w-6xl px-4">
         <div className="grid md:grid-cols-12 grid-cols-1 md:gap-7 gap-0">
           {/* INFORMATIONS */}
@@ -71,8 +72,7 @@ const Contactform = () => {
             className="row-start-1 col-start-1 row-end-2 md:col-end-7 col-end-12"
             data-aos="fade-left"
             data-aos-delay="200"
-            data-aos-duration="1000"
-          >
+            data-aos-duration="1000">
             <div className="flex gap-2 items-center justify-start">
               <span className="w-3 h-3 rounded-full bg-success"></span>
               <span className="font-medium text-sm text-white">
@@ -108,7 +108,7 @@ const Contactform = () => {
               </div>
             </div>
 
-            <div className="pt-12">
+            {/* <div className="pt-12">
               <p className="text-white/50 pb-4 text-base">
                 {associationObjectives.intro}
               </p>
@@ -127,7 +127,7 @@ const Contactform = () => {
                   height={20}
                 />
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* FORMULAIRE */}
@@ -135,8 +135,7 @@ const Contactform = () => {
             data-aos="fade-right"
             data-aos-delay="200"
             data-aos-duration="1000"
-            className="relative md:row-start-1 row-start-2 md:col-start-8 col-start-1 col-end-13"
-          >
+            className="relative md:row-start-1 row-start-2 md:col-start-8 col-start-1 col-end-13">
             <div className="lg:mt-0 mt-8 bg-white dark:bg-darkmode max-w-[50rem] m-auto pt-[2.1875rem] pb-8 px-[2.375rem] rounded-md relative z-10">
               <h2 className="sm:text-3xl text-lg font-bold text-midnight_text mb-3 dark:text-white">
                 Rejoindre le répertoire des anciens élèves
@@ -193,29 +192,40 @@ const Contactform = () => {
                   />
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-6 relative">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     required
                     placeholder="Mot de passe"
-                    className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white"
+                    className="w-full rounded-md border px-5 py-3 bg-transparent dark:text-white pr-12"
                   />
+
+                  {/* bouton toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                    {showPassword ?
+                      <EyeOff size={20} />
+                    : <Eye size={20} />}
+                  </button>
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary text-white py-3 rounded-md hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {loading ? "Création du compte..." : "Rejoindre le répertoire"}{" "}
+                  className="w-full bg-primary text-white py-3 rounded-md hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-70">
+                  {loading ?
+                    "Création du compte..."
+                  : "Rejoindre le répertoire"}{" "}
                   {loading && <Loader />}
                 </button>
               </form>
 
               <p className="text-xs text-gray-500 mt-4 text-center dark:text-white/50">
-                En rejoignant, tu pourras être visible dans l’annuaire des anciens
-                élèves du CEG 2 Ouidah.
+                En rejoignant, tu pourras être visible dans l’annuaire des
+                anciens élèves du CEG 2 Ouidah.
               </p>
 
               <p className="text-center mt-4 text-sm dark:text-white/80">
@@ -223,8 +233,7 @@ const Contactform = () => {
                 <button
                   type="button"
                   onClick={() => openSignIn()}
-                  className="text-primary ml-2 hover:underline"
-                >
+                  className="text-primary ml-2 hover:underline">
                   Se connecter
                 </button>
               </p>

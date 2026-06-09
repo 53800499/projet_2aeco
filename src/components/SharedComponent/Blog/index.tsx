@@ -20,7 +20,7 @@ type ApiBlog = {
 
 const Blog: React.FC = () => {
   const [posts, setPosts] = useState<Blog[]>([]);
-
+  
   useEffect(() => {
     const load = async () => {
       const res = await fetch("/api/blogs?limit=3");

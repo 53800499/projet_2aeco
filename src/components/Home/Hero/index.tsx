@@ -25,27 +25,39 @@ const Hero = () => {
             </span>
           </div>
 
-          <h1 className="text-midnight_text font-bold dark:text-white text-4xl md:text-5xl md:leading-[1.15]">
-            Reconnecter les anciens élèves du CEG2 de Ouidah
+          <h1 className="text-midnight_text font-bold dark:text-white text-3xl md:leading-[1.15]">
+            Reconnecter les anciens élèves du CEG 2 de Ouidah
           </h1>
 
-          <div className="text-gray-500 dark:text-white/70 text-lg font-semibold space-y-2">
-            <p>{associationObjectives.intro}</p>
-            <ul className="list-disc list-inside space-y-1 font-normal">
-              {associationObjectives.items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-          {user ? null : (
-            <Link
-              href="#inscription"
-              className="py-3 bg-primary text-white rounded-md hover:bg-green-700 transition duration-300 px-8">
-              Rejoindre le répertoire
-            </Link>
-          )}
+          <p className="text-gray-600 dark:text-white/70 text-base md:text-lg leading-relaxed">
+            L’Amicale des Anciens Élèves du CEG 2 de Ouidah{" "}
+            <span className="font-semibold text-primary">(2AECO)</span> est un
+            réseau dynamique qui rassemble les anciens élèves autour des valeurs
+            de solidarité, de partage et de développement communautaire.
+          </p>
 
-          <div className="flex items-center mt-12 gap-4">
+          <p className="text-gray-600 dark:text-white/70 text-sm md:text-base leading-relaxed">
+            Elle vise à renforcer les liens entre anciens camarades, soutenir
+            les initiatives éducatives du collège et contribuer activement à la
+            réussite des générations futures.
+          </p>
+          <div className="flex items-center gap-4 mt-4">
+            {user ? null : (
+              <Link
+                href="#inscription"
+                className="py-3 bg-primary text-white rounded-md hover:bg-green-700 transition duration-300 px-8">
+                Rejoindre le répertoire
+              </Link>
+            )}
+            <Link
+              href="#objectifs"
+              type="button"
+              className="hidden lg:block bg-transparent border border-primary text-primary px-4 py-3 rounded-lg hover:bg-primary hover:text-white">
+              Nos objectifs
+            </Link>
+          </div>
+
+          <div className="flex items-center mt-2 gap-4">
             <div className="flex items-center">
               <Image
                 src="/images/hero/hero-profile-1.jpg"
@@ -124,7 +136,7 @@ const Hero = () => {
   xl:after:inline-block after:hidden
 ">
           <Image
-            src="/images/hero/hero3.jpg"
+            src="/images/hero/herop.jpeg"
             alt="Communauté anciens élèves CEG 2 Ouidah"
             fill
             priority

@@ -15,8 +15,8 @@ export default function Logo() {
         <Image
           src="/images/logo/Logo1.png"
           alt="2aeco Logo"
-          width={52}
-          height={52}
+          width={90}
+          height={90}
           priority
           className="object-contain"
         />

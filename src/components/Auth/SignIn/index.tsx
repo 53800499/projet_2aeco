@@ -9,12 +9,14 @@ import { useAuthModal } from "@/app/context/AuthModalContext";
 import { useAuthFeedback } from "@/hooks/useAuthFeedback";
 import { AUTH_MESSAGES, formatAuthError } from "@/lib/auth-messages";
 import Loader from "@/components/Common/Loader";
+import { Eye, EyeOff } from "lucide-react";
 
 const Signin = ({ signInOpen }: { signInOpen?: (open: boolean) => void }) => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { signIn } = useAuthProfile();
   const { openSignUp, closeSignIn } = useAuthModal();
@@ -77,15 +79,25 @@ const Signin = ({ signInOpen }: { signInOpen?: (open: boolean) => void }) => {
           />
         </div>
 
-        <div className="mb-3">
+        <div className="mb-6 relative">
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             required
             placeholder="Mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded-md border border-border dark:border-dark_border bg-transparent px-5 py-3 text-base dark:text-white focus:border-primary outline-none"
           />
+
+          {/* bouton toggle */}
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+            {showPassword ?
+              <EyeOff size={20} />
+            : <Eye size={20} />}
+          </button>
         </div>
 
         {error && (

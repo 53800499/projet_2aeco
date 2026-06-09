@@ -13,7 +13,7 @@ import { useAuthProfile } from "@/app/context/AuthProfileContext";
 const Services = () => {
   const { user } = useAuthProfile();
   return (
-    <section className="bg-section dark:bg-darklight" id="features">
+    <section className="bg-section dark:bg-darklight" id="objectifs">
       <div className="container mx-auto max-w-6xl px-4">
         {/* HEADER */}
         <div

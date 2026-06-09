@@ -68,6 +68,12 @@
   );
 }
 
+@supports not (color: oklch(1 0 0)) {
+  :root {
+    --primary: #2F73F2;
+  }
+}
+
 /*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
@@ -169,4 +175,10 @@ body {
   body {
     background: white !important;
   }
+}
+
+/* Export PDF (html2pdf) — éviter les coupures de fiches */
+.plaquette-pdf-root .plaquette-card {
+  break-inside: avoid;
+  page-break-inside: avoid;
 }
