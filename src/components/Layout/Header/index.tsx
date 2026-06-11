@@ -64,12 +64,12 @@ const Header: React.FC = () => {
 
   return (
     <header
-      className={`fixed h-24 top-0 z-50 w-full dark:bg-transparent transition-all items-center`}>
-      <div className={`container mx-auto max-w-6xl flex items-center justify-between px-6 py-4 ${
+      className={`fixed h-24 top-0 z-50 w-full dark:bg-transparent transition-all flex items-center ${
         sticky ?
           "shadow-lg bg-white dark:shadow-dark-md dark:bg-darklight!"
         : "shadow-none"
       }`}>
+      <div className="container mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
         <Link href="/">
           <Logo />
         </Link>

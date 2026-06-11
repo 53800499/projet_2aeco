@@ -132,8 +132,8 @@
 
   .plaquette-card__photo {
     flex-shrink: 0;
-    width: 18mm;
-    height: 18mm;
+    width: 30mm;
+    height: 30mm;
     overflow: hidden;
     border-radius: 2mm;
     background: #f2f7f7;

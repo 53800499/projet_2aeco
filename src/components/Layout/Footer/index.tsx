@@ -14,7 +14,7 @@ const Footer: FC = () => {
           <div className="md:col-span-4 sm:col-span-6 col-span-12 sm:border-r border-b border-solid border-dark_border flex items-center sm:border-b-0 sm:min-h-25 py-10 shrink-0 ">
             <div className="sm:content-normal sm:text-start text-center content-center sm:w-auto w-full">
               <Link href="/" className="md:block flex justify-center">
-                <Logo className='justify-center'/>
+                <Logo className="justify-center" />
               </Link>
               <h2 className="text-white py-10 text-[32px] leading-tight font-bold">
                 Réseau des anciens élèves du CEG 2 de Ouidah
@@ -43,15 +43,15 @@ const Footer: FC = () => {
                 <Link
                   href="tel:+(229) 2560 0020"
                   className="text-2xl text-white/50 hover:text-white">
-                  +(229) 01 23 45 67 89
+                  +(229) 01 97 38 69 63
                 </Link>
               </div>
               <div className="sm:block flex items-center gap-3">
                 <p className="text-base font-bold text-white">Email</p>
                 <Link
-                  href="mailto:info@2aeco.com"
+                  href="mailto:infos2aeco@gmail.com"
                   className="text-2xl text-white/50 hover:text-white">
-                  info@2aeco.com
+                  infos2aeco@gmail.com
                 </Link>
               </div>
               <div>
@@ -128,7 +128,8 @@ const Footer: FC = () => {
               <p className="text-Mistygreen text-base pb-7 text-white/50">
                 Pour être mis à jour avec toutes les dernières nouvelles et
                 offres, abonnez-vous à notre newsletter.
-              </p>{/* 
+              </p>
+              {/* 
               <form className="newsletter-form flex rounded-lg sm:w-full w-3/4 sm:mx-0 mx-auto">
                 <input
                   type="email"

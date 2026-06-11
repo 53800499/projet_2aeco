@@ -9,7 +9,7 @@ const Location = () => {
       <section className="bg-primary md:py-24 py-16">
         <div className="container mx-auto max-w-6xl px-4">
           {/* SECTION 1 */}
-          <div className="grid md:grid-cols-6 lg:grid-cols-9 grid-cols-1 gap-7 border-b border-solid border-white border-opacity-50 pb-11">
+          {/* <div className="grid md:grid-cols-6 lg:grid-cols-9 grid-cols-1 gap-7 border-b border-solid border-white border-opacity-50 pb-11">
             <div className="col-span-3">
               <h2 className="text-white max-w-56 text-[40px] leading-tight font-bold">
                 Siège de l’Amicale
@@ -36,7 +36,7 @@ const Location = () => {
                 +229 00 00 00 00
               </Link>
             </div>
-          </div>
+          </div> */}
 
           {/* SECTION 2 */}
           <div className="grid md:grid-cols-6 lg:grid-cols-9 grid-cols-1 gap-7 pt-12">
@@ -55,16 +55,16 @@ const Location = () => {
 
             <div className="col-span-3">
               <Link
-                href="mailto:support@amicale-ceg2ouidah.org"
+                href="mailto:infos2aeco@gmail.com"
                 className="sm:text-2xl text-xl text-white font-medium underline">
-                support@amicale-ceg2ouidah.org
+                infos2aeco@gmail.com
               </Link>
 
               <Link
-                href="tel:+22900000000"
+                href="tel:+2290197386963"
                 className="sm:text-2xl text-white/80 text-xl flex items-center gap-2 hover:text-opacity-100 w-fit">
                 <span className="text-white/40">Appeler :</span>
-                +229 00 00 00 00
+                +229 01 97 38 69 63
               </Link>
             </div>
           </div>

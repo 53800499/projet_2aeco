@@ -9,6 +9,7 @@ import { PlaquetteMember } from "@/lib/plaquette";
 import { printPlaquetteDocument } from "@/lib/plaquette-print";
 import SpinnerScreen from "@/components/Common/spinner/spinner-screen";
 import "@/styles/plaquette-print.css";
+import "@/styles/plaquette-mobile.css";
 
 export default function PlaquettePage() {
   const [members, setMembers] = useState<PlaquetteMember[]>([]);
@@ -151,7 +152,7 @@ export default function PlaquettePage() {
             <p className="py-16 text-center text-grey">
               Aucun membre publié dans la plaquette pour le moment.
             </p>
-          : <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          : <ul className="grid gap-4 ">
               {sortedMembers.map((m) => (
                 <li key={m.id}>
                   <PlaquetteMemberCard member={m} />

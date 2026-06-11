@@ -1,0 +1,99 @@
+/**
+ * Plaquette — ajustements mobile uniquement (< 640px).
+ * N'affecte ni tablette/desktop ni l'export PDF (@media print).
+ */
+
+@media screen and (max-width: 639px) {
+  .plaquette-page {
+    margin-top: 5.5rem;
+  }
+
+  /* Barre d'outils */
+  .plaquette-no-print > div {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .plaquette-no-print > div > div:last-child {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .plaquette-no-print select,
+  .plaquette-no-print button {
+    width: 100%;
+  }
+
+  /* Couverture */
+  .plaquette-cover {
+    padding-top: 1.5rem !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .plaquette-cover__org {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+  }
+
+  .plaquette-cover__title {
+    font-size: 1.65rem !important;
+    line-height: 1.2;
+  }
+
+  .plaquette-cover__subtitle {
+    font-size: 0.875rem;
+  }
+
+  .plaquette-members {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  /* Grille — 1 colonne */
+  .plaquette-members > ul {
+    grid-template-columns: 1fr !important;
+    gap: 0.875rem;
+  }
+
+  /* Fiche membre — empilée */
+  .plaquette-card {
+    padding: 1rem !important;
+  }
+
+  .plaquette-card__header {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+  }
+
+  .plaquette-card__photo {
+    width: 5.5rem !important;
+    height: 5.5rem !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .plaquette-card__identity {
+    width: 100%;
+    border-left: none !important;
+    padding-left: 0 !important;
+    text-align: center;
+  }
+
+  .plaquette-card__name {
+    font-size: 1rem;
+  }
+
+  .plaquette-card__job,
+  .plaquette-card__employer {
+    font-size: 0.8125rem;
+    word-break: break-word;
+  }
+}
