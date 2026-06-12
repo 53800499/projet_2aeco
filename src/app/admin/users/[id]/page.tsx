@@ -209,16 +209,21 @@ export default function AdminUserDetailPage() {
             <input className={inputClass} value={draft.full_name || ""} onChange={(e) => update("full_name", e.target.value)} />
           </label>
           <label className="grid gap-1 text-sm">
-            Téléphone
-            <input className={inputClass} value={draft.phone || ""} onChange={(e) => update("phone", e.target.value)} />
-          </label>
-          <label className="grid gap-1 text-sm">
             Promotion
             <input className={inputClass} value={draft.promo || ""} onChange={(e) => update("promo", e.target.value)} />
           </label>
           <label className="grid gap-1 text-sm">
             Sexe
             <input className={inputClass} value={draft.sexe || ""} onChange={(e) => update("sexe", e.target.value)} />
+          </label>
+          <label className="grid gap-1 text-sm">
+            N° matricule
+            <input
+              className={`${inputClass} bg-slate-50 dark:bg-dark_border/30`}
+              value={draft.matricule || ""}
+              readOnly
+              aria-readonly
+            />
           </label>
           <div className="md:col-span-2">
             <ImageFileInput
@@ -247,8 +252,8 @@ export default function AdminUserDetailPage() {
             <input className={inputClass} value={draft.ville_residence || ""} onChange={(e) => update("ville_residence", e.target.value)} />
           </label>
           <label className="grid gap-1 text-sm">
-            WhatsApp
-            <input className={inputClass} value={draft.whatsapp || ""} onChange={(e) => update("whatsapp", e.target.value)} />
+            Téléphone / contact
+            <input className={inputClass} value={draft.phone || ""} onChange={(e) => update("phone", e.target.value)} />
           </label>
           <label className="grid gap-1 text-sm">
             Profession

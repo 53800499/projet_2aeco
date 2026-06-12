@@ -17,8 +17,6 @@ export interface PlaquetteMember {
   employeur_structure: string | null;
   ville_residence: string | null;
   pays_residence: string | null;
-  whatsapp: string | null;
-  linkedin: string | null;
   photo: string | null;
 }
 

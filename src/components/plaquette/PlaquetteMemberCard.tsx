@@ -38,9 +38,9 @@ export default function PlaquetteMemberCard({ member }: { member: PlaquetteMembe
             </p>
           )}
 
-          {member.whatsapp && (
+          {member.phone && (
             <p className="plaquette-card__job mt-1 text-sm font-medium text-midnight_text dark:text-white/90">
-              {member.whatsapp}
+              {member.phone}
             </p>
           )}
 

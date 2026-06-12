@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import HeroSub from "@/components/SharedComponent/HeroSub";
 import SpinnerScreen from "@/components/Common/spinner/spinner-screen";
 import ImageFileInput from "@/components/Common/ImageFileInput";
+import MembershipCardSection from "@/components/membership/MembershipCardSection";
 import {
   COTISATION_SITUATION_OPTIONS,
   getMissingProfileFields,
@@ -346,8 +347,13 @@ export default function ProfilePage() {
                   {renderField("sexe")}
                   {renderField("date_naissance", "date")}
                   {renderField("nationalite")}
+                  <label className="grid gap-1 text-sm font-medium text-midnight_text dark:text-white">
+                    N° matricule
+                    <div className="rounded-2xl border border-border bg-slate-50 px-4 py-3 text-sm text-grey dark:border-dark_border dark:bg-dark_border/30 dark:text-white/80 min-h-[46px]">
+                      {view?.matricule?.trim() || "Attribué à l'inscription"}
+                    </div>
+                  </label>
                   {renderField("email", "email")}
-                  {renderField("phone", "tel", "Téléphone")}
                 </div>
               </article>
 
@@ -375,18 +381,12 @@ export default function ProfilePage() {
               </article>
 
               <article className="rounded-2xl border border-border p-5 dark:border-dark_border">
-                <h2 className="text-lg font-semibold">Contact & réseaux</h2>
+                <h2 className="text-lg font-semibold">Contact</h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {renderField("telephone_principal", "tel")}
-                  {renderField("telephone_secondaire", "tel")}
+                  {renderField("phone", "tel", "Téléphone / contact")}
                   {renderField("ville_residence")}
                   {renderField("pays_residence")}
                   {renderTextarea("adresse_complete", 2)}
-                  {renderField("email_secondaire", "email")}
-                  {renderField("whatsapp", "tel")}
-                  {renderField("facebook")}
-                  {renderField("linkedin")}
-                  {renderField("autres_reseaux")}
                 </div>
               </article>
 
@@ -458,6 +458,8 @@ export default function ProfilePage() {
                 }
               }}
             />
+
+            {!editing && profile && <MembershipCardSection profile={profile} />}
 
             <section className="rounded-3xl border border-border bg-white p-6 shadow-service dark:border-dark_border dark:bg-darkmode">
               <h2 className="text-xl font-semibold text-midnight_text dark:text-white">

@@ -28,7 +28,7 @@ export default function ProfileCompletionBanner({
   };
 
   return (
-    <div className="mx-auto mb-6 w-full max-w-6xl overflow-hidden rounded-xl border-2 border-amber-400 bg-amber-50 shadow-md dark:border-amber-500/50 dark:bg-amber-950/30">
+    <div className="mb-3 w-full overflow-hidden rounded-xl border-2 border-amber-400 bg-amber-50 shadow-md dark:border-amber-500/50 dark:bg-amber-950/30">
       <div className="flex items-start justify-between gap-4 p-5">
         <div className="flex-1 space-y-4">
           <div>

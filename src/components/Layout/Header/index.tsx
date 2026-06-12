@@ -62,23 +62,26 @@ const Header: React.FC = () => {
   const { openSignIn, openSignUp } = useAuthModal();
   const isAdmin = useIsAdmin(profile);
 
+  const showSolidHeader = sticky || pathUrl !== "/";
+
   return (
-    <header
-      className={`fixed h-24 top-0 z-50 w-full dark:bg-transparent transition-all flex items-center ${
-        sticky ?
-          "shadow-lg bg-white dark:shadow-dark-md dark:bg-darklight!"
-        : "shadow-none"
-      }`}>
-      <div className="container mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
-        <Link href="/">
+    <header className="fixed top-0 z-50 w-full">
+      <div
+        className={`transition-all ${
+          showSolidHeader ?
+            "bg-white shadow-lg dark:bg-darklight dark:shadow-dark-md"
+          : "bg-transparent shadow-none"
+        }`}>
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 py-3 sm:px-6">
+        <Link href="/" className="shrink-0">
           <Logo />
         </Link>
-        <nav className="hidden lg:flex grow items-center justify-center gap-6">
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-6 lg:flex">
           {headerData.map((item, index) => (
             <HeaderLink key={index} item={item} />
           ))}
         </nav>
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-3 sm:gap-4">
           <button
             aria-label="Toggle theme"
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -140,8 +143,11 @@ const Header: React.FC = () => {
             <span className="block w-6 h-0.5 bg-black dark:bg-white mt-1.5"></span>
           </button>
         </div>
+        </div>
       </div>
-      <ProfileCompletionBanner />
+      <div className="mx-auto w-full max-w-6xl px-4 pt-2 sm:px-6">
+        <ProfileCompletionBanner />
+      </div>
       {navbarOpen && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/50 z-40" />
       )}

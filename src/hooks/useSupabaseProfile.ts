@@ -20,13 +20,12 @@ const assertNoError = (label: string, result: { error: { message: string } | nul
 };
 
 const fetchLinkedProfile = async (supabase: any, userId: string) => {
-  const [userData, academicData, professionalData, locationData, amicaleData, socialData, observationData, mediaData] = await Promise.all([
+  const [userData, academicData, professionalData, locationData, amicaleData, observationData, mediaData] = await Promise.all([
     supabase.from("users").select("*").eq("id", userId).maybeSingle(),
     supabase.from("academic_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("professional_profiles").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("locations").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("amicale_memberships").select("*").eq("user_id", userId).maybeSingle(),
-    supabase.from("social_links").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("observations").select("*").eq("user_id", userId).maybeSingle(),
     supabase.from("media").select("*").eq("user_id", userId).maybeSingle(),
   ]);
@@ -37,7 +36,6 @@ const fetchLinkedProfile = async (supabase: any, userId: string) => {
     ...(professionalData.data || {}),
     ...(locationData.data || {}),
     ...(amicaleData.data || {}),
-    ...(socialData.data || {}),
     ...(observationData.data || {}),
     ...(mediaData.data || {}),
   });
@@ -73,13 +71,12 @@ export const useSupabaseProfile = () => {
       return { data: null, error: new Error("Profil indisponible") };
     }
 
-    const [userResponse, academicResponse, professionalResponse, locationResponse, amicaleResponse, socialResponse, observationResponse, mediaResponse] = await Promise.all([
+    const [userResponse, academicResponse, professionalResponse, locationResponse, amicaleResponse, observationResponse, mediaResponse] = await Promise.all([
       supabase.from("users").select("*").eq("id", userId).maybeSingle(),
       supabase.from("academic_profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("professional_profiles").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("locations").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("amicale_memberships").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("social_links").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("observations").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("media").select("*").eq("user_id", userId).maybeSingle(),
     ]);
@@ -95,7 +92,6 @@ export const useSupabaseProfile = () => {
       ...(professionalResponse.data || {}),
       ...(locationResponse.data || {}),
       ...(amicaleResponse.data || {}),
-      ...(socialResponse.data || {}),
       ...(observationResponse.data || {}),
       ...(mediaResponse.data || {}),
       onboarding_completed: Boolean(baseProfile.onboarding_completed),
@@ -127,9 +123,8 @@ export const useSupabaseProfile = () => {
       sexe: normalized.sexe || "",
       date_naissance: normalized.date_naissance || null,
       nationalite: normalized.nationalite || "",
-      phone: normalized.phone || normalized.telephone_principal || "",
+      phone: normalized.phone || "",
       promo: normalized.promo || normalized.promotion_generation || "",
-      email_secondaire: normalized.email_secondaire || "",
       onboarding_completed: true,
       updated_at: timestamp,
     };
@@ -166,8 +161,7 @@ export const useSupabaseProfile = () => {
         domaine_activite: normalized.domaine_activite || null,
       }),
       upsertLinkedRow("locations", {
-        telephone_principal: normalized.telephone_principal || normalized.phone || null,
-        telephone_secondaire: normalized.telephone_secondaire || null,
+        telephone_principal: normalized.phone || null,
         ville_residence: normalized.ville_residence || null,
         pays_residence: normalized.pays_residence || null,
         adresse_complete: normalized.adresse_complete || null,
@@ -178,12 +172,6 @@ export const useSupabaseProfile = () => {
         situation_cotisations: normalized.situation_cotisations || null,
         poste_amicale: normalized.poste_amicale || null,
         disponibilite_benevolat: normalized.disponibilite_benevolat || null,
-      }),
-      upsertLinkedRow("social_links", {
-        whatsapp: normalized.whatsapp || null,
-        facebook: normalized.facebook || null,
-        linkedin: normalized.linkedin || null,
-        autres_reseaux: normalized.autres_reseaux || null,
       }),
       upsertLinkedRow("observations", {
         competences_particulieres: normalized.competences_particulieres || null,
@@ -198,7 +186,7 @@ export const useSupabaseProfile = () => {
     ]);
 
     linkedResults.forEach((result, index) => {
-      const tables = ["academic_profiles", "professional_profiles", "locations", "amicale_memberships", "social_links", "observations", "media"];
+      const tables = ["academic_profiles", "professional_profiles", "locations", "amicale_memberships", "observations", "media"];
       assertNoError(tables[index], result);
     });
 

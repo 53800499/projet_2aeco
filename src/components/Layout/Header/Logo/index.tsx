@@ -4,21 +4,21 @@ import Image from "next/image";
 import React from "react";
 
 type LogoProps = {
-  logoColor: string;
+  size?: number;
 };
 
-export default function Logo() {
+export default function Logo({ size = 90 }: LogoProps) {
   return (
-    <div className="flex items-center gap-2">
-      {/* Logo SVG */}
+    <div className="flex shrink-0 items-center gap-2">
       <div className="relative flex items-center justify-center">
         <Image
           src="/images/logo/Logo1.png"
           alt="2aeco Logo"
-          width={90}
-          height={90}
+          width={size}
+          height={size}
           priority
           className="object-contain"
+          style={{ width: size, height: size }}
         />
       </div>
     </div>

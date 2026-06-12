@@ -76,7 +76,6 @@ const LINKED_BATCH_SELECT: Record<ProfileBatchMode, Record<string, string>> = {
     professional_profiles: "*",
     locations: "*",
     amicale_memberships: "*",
-    social_links: "*",
     observations: "*",
     media: "*",
   },
@@ -109,13 +108,12 @@ export const loadProfilesBatch = async (
   const ids = users.map((u) => u.id);
   const sel = LINKED_BATCH_SELECT[mode];
 
-  const [academic, professional, locations, amicale, social, observations, media] =
+  const [academic, professional, locations, amicale, observations, media] =
     await Promise.all([
       admin.from("academic_profiles").select(sel.academic_profiles).in("user_id", ids),
       admin.from("professional_profiles").select(sel.professional_profiles).in("user_id", ids),
       admin.from("locations").select(sel.locations).in("user_id", ids),
       admin.from("amicale_memberships").select(sel.amicale_memberships).in("user_id", ids),
-      admin.from("social_links").select(sel.social_links).in("user_id", ids),
       admin.from("observations").select(sel.observations).in("user_id", ids),
       admin.from("media").select(sel.media).in("user_id", ids),
     ]);
@@ -127,7 +125,6 @@ export const loadProfilesBatch = async (
   const professionalMap = indexRowsByUserId(asLinked(professional.data));
   const locationsMap = indexRowsByUserId(asLinked(locations.data));
   const amicaleMap = indexRowsByUserId(asLinked(amicale.data));
-  const socialMap = indexRowsByUserId(asLinked(social.data));
   const observationsMap = indexRowsByUserId(asLinked(observations.data));
   const mediaMap = indexRowsByUserId(asLinked(media.data));
 
@@ -138,7 +135,6 @@ export const loadProfilesBatch = async (
       ...(professionalMap.get(u.id) || {}),
       ...(locationsMap.get(u.id) || {}),
       ...(amicaleMap.get(u.id) || {}),
-      ...(socialMap.get(u.id) || {}),
       ...(observationsMap.get(u.id) || {}),
       ...(mediaMap.get(u.id) || {}),
     });
@@ -348,7 +344,7 @@ export const getPlaquetteMembers = async (
       first_name: profile.first_name ?? null,
       last_name: profile.last_name ?? null,
       promo: profile.promo ?? null,
-      phone: profile.phone ?? profile.telephone_principal ?? null,
+      phone: profile.phone ?? null,
       sexe: profile.sexe ?? null,
       serie_filiere: profile.serie_filiere ?? null,
       derniere_classe: profile.derniere_classe ?? null,
@@ -360,8 +356,6 @@ export const getPlaquetteMembers = async (
       employeur_structure: profile.employeur_structure ?? null,
       ville_residence: profile.ville_residence ?? null,
       pays_residence: profile.pays_residence ?? null,
-      whatsapp: profile.whatsapp ?? null,
-      linkedin: profile.linkedin ?? null,
       photo: profile.photo ?? null,
     });
   }

@@ -8,7 +8,6 @@ export interface ProfileRecord {
   promo?: string;
   first_name?: string;
   last_name?: string;
-  email_secondaire?: string;
   diplome?: string;
   serie?: string;
   ville?: string;
@@ -19,6 +18,7 @@ export interface ProfileRecord {
   sexe?: string;
   date_naissance?: string;
   nationalite?: string;
+  matricule?: string;
   photo?: string;
   annee_entree?: string;
   annee_sortie?: string;
@@ -30,8 +30,8 @@ export interface ProfileRecord {
   fonction_actuelle?: string;
   employeur_structure?: string;
   domaine_activite?: string;
+  /** @deprecated Lecture legacy — utiliser `phone` */
   telephone_principal?: string;
-  telephone_secondaire?: string;
   ville_residence?: string;
   pays_residence?: string;
   adresse_complete?: string;
@@ -40,10 +40,6 @@ export interface ProfileRecord {
   situation_cotisations?: string;
   poste_amicale?: string;
   disponibilite_benevolat?: string;
-  whatsapp?: string;
-  facebook?: string;
-  linkedin?: string;
-  autres_reseaux?: string;
   competences_particulieres?: string;
   contribution_possible?: string;
   besoins_attentes?: string;
@@ -74,8 +70,7 @@ export const PROFILE_COMPLETION_FIELD_KEYS = [
   "fonction_actuelle",
   "employeur_structure",
   "domaine_activite",
-  "telephone_principal",
-  "telephone_secondaire",
+  "phone",
   "email",
   "ville_residence",
   "pays_residence",
@@ -85,10 +80,6 @@ export const PROFILE_COMPLETION_FIELD_KEYS = [
   "situation_cotisations",
   "poste_amicale",
   "disponibilite_benevolat",
-  "whatsapp",
-  "facebook",
-  "linkedin",
-  "autres_reseaux",
   "competences_particulieres",
   "contribution_possible",
   "besoins_attentes",
@@ -99,7 +90,7 @@ export const PROFILE_COMPLETION_FIELD_KEYS = [
  * Ne pas réduire cette liste dans le back-office (batch « light »).
  */
 export const USER_SELECT_FOR_PROFILE_COMPLETION =
-  "id, email, full_name, first_name, last_name, sexe, date_naissance, nationalite, phone, promo, role, onboarding_completed, visible_in_plaquette, created_at, updated_at, deleted_at";
+  "id, email, full_name, first_name, last_name, sexe, date_naissance, nationalite, matricule, phone, promo, role, onboarding_completed, visible_in_plaquette, created_at, updated_at, deleted_at";
 
 /** Colonnes des tables liées — toutes les clés utilisées par PROFILE_COMPLETION_FIELD_KEYS */
 export const LINKED_SELECT_FOR_PROFILE_COMPLETION = {
@@ -108,15 +99,14 @@ export const LINKED_SELECT_FOR_PROFILE_COMPLETION = {
   professional_profiles:
     "user_id,profession,fonction_actuelle,employeur_structure,domaine_activite",
   locations:
-    "user_id,telephone_principal,telephone_secondaire,ville_residence,pays_residence,adresse_complete",
+    "user_id,telephone_principal,ville_residence,pays_residence,adresse_complete",
   amicale_memberships:
     "user_id,date_adhesion_amicale,statut_membre,situation_cotisations,poste_amicale,disponibilite_benevolat",
-  social_links: "user_id,whatsapp,facebook,linkedin,autres_reseaux",
   observations: "user_id,competences_particulieres,contribution_possible,besoins_attentes",
   media: "user_id,photo",
 } as const;
 
-export const COTISATION_SITUATION_OPTIONS = ["Ajout", "Non ajout"] as const;
+export const COTISATION_SITUATION_OPTIONS = ["A jour", "Non à jour"] as const;
 export const MEMBER_STATUS_OPTIONS = ["Actif", "Sympathisant", "Honoraire"] as const;
 
 /** % minimum pour apparaître dans la plaquette numérique */
@@ -141,8 +131,7 @@ export const PROFILE_FIELD_LABELS: Record<ProfileCompletionFieldKey, string> = {
   fonction_actuelle: "Fonction actuelle",
   employeur_structure: "Employeur / structure",
   domaine_activite: "Domaine d’activité",
-  telephone_principal: "Téléphone principal",
-  telephone_secondaire: "Téléphone secondaire",
+  phone: "Téléphone / contact",
   email: "Email",
   ville_residence: "Ville de résidence",
   pays_residence: "Pays de résidence",
@@ -152,10 +141,6 @@ export const PROFILE_FIELD_LABELS: Record<ProfileCompletionFieldKey, string> = {
   situation_cotisations: "Situation de cotisation",
   poste_amicale: "Poste à l’amicale",
   disponibilite_benevolat: "Disponibilité bénévolat",
-  whatsapp: "WhatsApp",
-  facebook: "Facebook",
-  linkedin: "LinkedIn",
-  autres_reseaux: "Autres réseaux",
   competences_particulieres: "Compétences particulières",
   contribution_possible: "Contribution possible",
   besoins_attentes: "Besoins / attentes",
@@ -172,15 +157,7 @@ export const PROFILE_COMPLETION_STEP_GROUPS: (keyof ProfileRecord)[][] = [
     "diplome_obtenu",
     "promotion_generation",
   ],
-  [
-    "telephone_principal",
-    "telephone_secondaire",
-    "email",
-    "ville_residence",
-    "pays_residence",
-    "whatsapp",
-    "email_secondaire",
-  ],
+  ["phone", "email", "ville_residence", "pays_residence", "adresse_complete"],
 ];
 
 const isFilled = (value: unknown): boolean =>
@@ -202,7 +179,6 @@ export const normalizeProfile = (profile: unknown = {}): ProfileRecord => {
     last_name: p.last_name || full_name.split(" ").slice(1).join(" ") || "",
     email: p.email || (raw.user_email as string) || "",
     phone: p.phone || p.telephone_principal || "",
-    telephone_principal: p.telephone_principal || p.phone || p.whatsapp || "",
     serie_filiere: p.serie_filiere || p.serie || "",
     serie: p.serie || p.serie_filiere || "",
     diplome_obtenu: p.diplome_obtenu || p.diplome || "",
@@ -213,7 +189,6 @@ export const normalizeProfile = (profile: unknown = {}): ProfileRecord => {
     pays: p.pays || p.pays_residence || "",
     promotion_generation: p.promotion_generation || p.promo || "",
     promo: p.promo || p.promotion_generation || "",
-    whatsapp: p.whatsapp || p.telephone_principal || p.phone || "",
   };
 };
 
@@ -227,8 +202,7 @@ export const normalizeProfileForSave = (profile: ProfileRecord): ProfileRecord =
     ville_residence: normalized.ville_residence,
     pays_residence: normalized.pays_residence,
     promotion_generation: normalized.promotion_generation,
-    telephone_principal: normalized.telephone_principal,
-    whatsapp: normalized.whatsapp,
+    phone: normalized.phone,
   };
 };
 

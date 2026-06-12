@@ -56,7 +56,6 @@ export async function PATCH(request: Request, context: RouteContext) {
         nationalite: normalized.nationalite,
         phone: normalized.phone,
         promo: normalized.promo,
-        email_secondaire: normalized.email_secondaire,
         onboarding_completed: Boolean(normalized.onboarding_completed),
         visible_in_plaquette: body.visible_in_plaquette !== false,
         role: body.role === "admin" ? "admin" : "member",
@@ -119,8 +118,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         domaine_activite: normalized.domaine_activite,
       }),
       upsertLinked("locations", {
-        telephone_principal: normalized.telephone_principal,
-        telephone_secondaire: normalized.telephone_secondaire,
+        telephone_principal: normalized.phone || null,
         ville_residence: normalized.ville_residence,
         pays_residence: normalized.pays_residence,
         adresse_complete: normalized.adresse_complete,
@@ -131,12 +129,6 @@ export async function PATCH(request: Request, context: RouteContext) {
         situation_cotisations: normalized.situation_cotisations,
         poste_amicale: normalized.poste_amicale,
         disponibilite_benevolat: normalized.disponibilite_benevolat,
-      }),
-      upsertLinked("social_links", {
-        whatsapp: normalized.whatsapp,
-        facebook: normalized.facebook,
-        linkedin: normalized.linkedin,
-        autres_reseaux: normalized.autres_reseaux,
       }),
       upsertLinked("observations", {
         competences_particulieres: normalized.competences_particulieres,
