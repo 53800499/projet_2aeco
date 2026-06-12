@@ -58,7 +58,7 @@ export default function MembershipCardSection({ profile }: MembershipCardSection
         <>
           <p className="mt-3 text-sm text-grey dark:text-white/70">
             Un clic suffit : la carte s&apos;enregistre automatiquement sur votre
-            appareil au format image (PNG).
+            appareil au format PDF (taille carte bancaire).
           </p>
 
           <div

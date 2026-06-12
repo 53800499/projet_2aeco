@@ -1,4 +1,9 @@
 import { toPng } from "html-to-image";
+import { jsPDF } from "jspdf";
+
+/** Format carte bancaire ISO (paysage). */
+const CARD_WIDTH_MM = 85.6;
+const CARD_HEIGHT_MM = 54;
 
 const buildFileName = (options?: { memberName?: string; matricule?: string }) => {
   const matricule = (options?.matricule?.trim() || "carte").replace(/[^\w-]+/g, "-");
@@ -8,20 +13,10 @@ const buildFileName = (options?: { memberName?: string; matricule?: string }) =>
     .replace(/[^\w\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-");
-  return `carte-membre-${matricule}-${name}.png`;
+  return `carte-membre-${matricule}-${name}.pdf`;
 };
 
-const triggerDownload = (dataUrl: string, fileName: string) => {
-  const link = document.createElement("a");
-  link.href = dataUrl;
-  link.download = fileName;
-  link.rel = "noopener";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-};
-
-/** Télécharge la carte en PNG via html-to-image (un clic, fichier direct). */
+/** Télécharge la carte en PDF (format carte bancaire, un clic). */
 export async function downloadMembershipCard(
   cardRoot: HTMLElement,
   options?: { memberName?: string; matricule?: string }
@@ -38,5 +33,13 @@ export async function downloadMembershipCard(
     skipFonts: false,
   });
 
-  triggerDownload(dataUrl, buildFileName(options));
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: [CARD_WIDTH_MM, CARD_HEIGHT_MM],
+    compress: true,
+  });
+
+  pdf.addImage(dataUrl, "PNG", 0, 0, CARD_WIDTH_MM, CARD_HEIGHT_MM);
+  pdf.save(buildFileName(options));
 }
