@@ -1,63 +1,7 @@
 /**
- * Carte de membre — impression / export PDF navigateur.
- * Format carte bancaire paysage (85,6 × 54 mm).
+ * Carte de membre — styles d’aperçu à l’écran.
+ * L’export PNG utilise html-to-image (membership-card-print.ts).
  */
-
-.membership-card-document {
-  display: none;
-}
-
-@media print {
-  @page {
-    size: 85.6mm 54mm landscape;
-    margin: 0;
-  }
-
-  html,
-  body {
-    width: 85.6mm !important;
-    height: 54mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #ffffff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  body * {
-    visibility: hidden;
-  }
-
-  .membership-card-document,
-  .membership-card-document * {
-    visibility: visible;
-  }
-
-  .membership-card-document {
-    display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 85.6mm;
-    height: 54mm;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #ffffff;
-  }
-
-  .membership-card {
-    width: 85.6mm;
-    height: 54mm;
-    box-sizing: border-box;
-    border: 0.4mm solid #207226;
-    border-radius: 2mm;
-    background: linear-gradient(135deg, #f8fcf8 0%, #ffffff 55%, #eef7ef 100%);
-    font-family: Georgia, "Times New Roman", serif;
-    color: #13241d;
-    page-break-inside: avoid;
-  }
-}
 
 .membership-card {
   position: relative;

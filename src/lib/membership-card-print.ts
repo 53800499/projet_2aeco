@@ -1,20 +1,42 @@
-/** Export carte de membre via le moteur d'impression du navigateur (PDF / image). */
+import { toPng } from "html-to-image";
 
-export function printMembershipCard(options?: { memberName?: string; matricule?: string }) {
-  const previousTitle = document.title;
-  const name = options?.memberName?.trim() || "Membre";
-  const matricule = options?.matricule?.trim();
-  const date = new Date().toLocaleDateString("fr-FR");
+const buildFileName = (options?: { memberName?: string; matricule?: string }) => {
+  const matricule = (options?.matricule?.trim() || "carte").replace(/[^\w-]+/g, "-");
+  const name = (options?.memberName?.trim() || "membre")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+  return `carte-membre-${matricule}-${name}.png`;
+};
 
-  document.title = matricule
-    ? `Carte membre ${name} - ${matricule} - ${date}`
-    : `Carte membre ${name} - ${date}`;
+const triggerDownload = (dataUrl: string, fileName: string) => {
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = fileName;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+};
 
-  const restoreTitle = () => {
-    document.title = previousTitle;
-    window.removeEventListener("afterprint", restoreTitle);
-  };
+/** Télécharge la carte en PNG via html-to-image (un clic, fichier direct). */
+export async function downloadMembershipCard(
+  cardRoot: HTMLElement,
+  options?: { memberName?: string; matricule?: string }
+) {
+  const card = cardRoot.querySelector(".membership-card") as HTMLElement | null;
+  if (!card) {
+    throw new Error("Carte introuvable.");
+  }
 
-  window.addEventListener("afterprint", restoreTitle);
-  window.print();
+  const dataUrl = await toPng(card, {
+    cacheBust: true,
+    pixelRatio: 3,
+    backgroundColor: "#ffffff",
+    skipFonts: false,
+  });
+
+  triggerDownload(dataUrl, buildFileName(options));
 }

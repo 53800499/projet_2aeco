@@ -13,24 +13,19 @@ const LOGO_SRC = "/images/logo/Logo1.png";
 interface MembershipCardProps {
   profile: Partial<ProfileRecord>;
   className?: string;
-  documentRoot?: boolean;
 }
 
 export default function MembershipCard({
   profile,
   className = "",
-  documentRoot = false
 }: MembershipCardProps) {
   const name = getMembershipCardDisplayName(profile);
   const registrationDate = formatMembershipRegistrationDate(profile.created_at);
   const matricule = profile.matricule?.trim() || "—";
 
-  const rootClass =
-    documentRoot ? `membership-card-document ${className}`.trim() : className;
-
   return (
-    <div className={rootClass}>
-      <article className="" aria-label={`Carte de membre de ${name}`}>
+    <div className={className}>
+      <article aria-label={`Carte de membre de ${name}`}>
         <div className="membership-card">
           <div className="membership-card__photo-wrap">
             {profile.photo ?
@@ -38,6 +33,7 @@ export default function MembershipCard({
                 src={profile.photo}
                 alt={`Photo de ${name}`}
                 className="membership-card__photo"
+                crossOrigin="anonymous"
               />
             : <div className="membership-card__photo-placeholder">Photo</div>}
           </div>
@@ -48,6 +44,7 @@ export default function MembershipCard({
                 src={LOGO_SRC}
                 alt="Logo 2AECO"
                 className="membership-card__logo"
+                crossOrigin="anonymous"
               />
             </header>
             <p className="membership-card__org">

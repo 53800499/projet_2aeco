@@ -1,12 +1,15 @@
 "use client";
 
+import { useRef, useState } from "react";
+import { Download } from "lucide-react";
 import MembershipCard from "@/components/membership/MembershipCard";
 import {
   getMembershipCardDisplayName,
   getMissingMembershipCardFields,
   isMembershipCardEligible,
 } from "@/lib/membership-card";
-import { printMembershipCard } from "@/lib/membership-card-print";
+import { downloadMembershipCard } from "@/lib/membership-card-print";
+import { useAuthFeedback } from "@/hooks/useAuthFeedback";
 import { ProfileRecord } from "@/lib/profile";
 import "@/styles/membership-card-print.css";
 
@@ -15,15 +18,33 @@ interface MembershipCardSectionProps {
 }
 
 export default function MembershipCardSection({ profile }: MembershipCardSectionProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+  const { showSuccess, showError } = useAuthFeedback();
   const eligible = isMembershipCardEligible(profile);
   const missing = getMissingMembershipCardFields(profile);
   const displayName = getMembershipCardDisplayName(profile);
 
-  const handleDownload = () => {
-    printMembershipCard({
-      memberName: displayName,
-      matricule: profile.matricule,
-    });
+  const handleDownload = async () => {
+    const cardNode = cardRef.current;
+    if (!cardNode || downloading) return;
+
+    setDownloading(true);
+    try {
+      await downloadMembershipCard(cardNode, {
+        memberName: displayName,
+        matricule: profile.matricule,
+      });
+      showSuccess("Votre carte a été téléchargée.");
+    } catch (error) {
+      showError(
+        error instanceof Error
+          ? error.message
+          : "Le téléchargement de la carte a échoué."
+      );
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -36,23 +57,26 @@ export default function MembershipCardSection({ profile }: MembershipCardSection
       {eligible ? (
         <>
           <p className="mt-3 text-sm text-grey dark:text-white/70">
-            Votre profil est à jour. Téléchargez votre carte de membre au format PDF
-            (via l&apos;impression du navigateur).
+            Un clic suffit : la carte s&apos;enregistre automatiquement sur votre
+            appareil au format image (PNG).
           </p>
 
-          <div className="mt-5 flex justify-center">
+          <div
+            ref={cardRef}
+            className="membership-card-preview mt-5 flex justify-center"
+          >
             <MembershipCard profile={profile} />
           </div>
 
           <button
             type="button"
-            onClick={handleDownload}
-            className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
+            onClick={() => void handleDownload()}
+            disabled={downloading}
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-wait disabled:opacity-70"
           >
-            Télécharger ma carte de membre
+            <Download className="h-4 w-4" aria-hidden />
+            {downloading ? "Téléchargement en cours…" : "Télécharger ma carte de membre"}
           </button>
-
-          <MembershipCard profile={profile} documentRoot />
         </>
       ) : (
         <div className="mt-4 space-y-3 text-sm text-grey dark:text-white/70">

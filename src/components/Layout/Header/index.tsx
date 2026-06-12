@@ -72,7 +72,7 @@ const Header: React.FC = () => {
             "bg-white shadow-lg dark:bg-darklight dark:shadow-dark-md"
           : "bg-transparent shadow-none"
         }`}>
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 py-3 sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 py-1 px-2">
         <Link href="/" className="shrink-0">
           <Logo />
         </Link>
