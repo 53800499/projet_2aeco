@@ -127,7 +127,6 @@ export const useSupabaseProfile = () => {
       sexe: normalized.sexe || "",
       date_naissance: normalized.date_naissance || null,
       nationalite: normalized.nationalite || "",
-      cip_ifu: normalized.cip_ifu || "",
       phone: normalized.phone || normalized.telephone_principal || "",
       promo: normalized.promo || normalized.promotion_generation || "",
       email_secondaire: normalized.email_secondaire || "",

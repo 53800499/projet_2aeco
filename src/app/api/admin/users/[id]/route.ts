@@ -54,7 +54,6 @@ export async function PATCH(request: Request, context: RouteContext) {
         sexe: normalized.sexe,
         date_naissance: normalized.date_naissance || null,
         nationalite: normalized.nationalite,
-        cip_ifu: normalized.cip_ifu,
         phone: normalized.phone,
         promo: normalized.promo,
         email_secondaire: normalized.email_secondaire,

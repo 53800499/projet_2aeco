@@ -19,7 +19,6 @@ export interface ProfileRecord {
   sexe?: string;
   date_naissance?: string;
   nationalite?: string;
-  cip_ifu?: string;
   photo?: string;
   annee_entree?: string;
   annee_sortie?: string;
@@ -64,7 +63,6 @@ export const PROFILE_COMPLETION_FIELD_KEYS = [
   "sexe",
   "date_naissance",
   "nationalite",
-  "cip_ifu",
   "photo",
   "annee_entree",
   "annee_sortie",
@@ -101,7 +99,7 @@ export const PROFILE_COMPLETION_FIELD_KEYS = [
  * Ne pas réduire cette liste dans le back-office (batch « light »).
  */
 export const USER_SELECT_FOR_PROFILE_COMPLETION =
-  "id, email, full_name, first_name, last_name, sexe, date_naissance, nationalite, cip_ifu, phone, promo, role, onboarding_completed, visible_in_plaquette, created_at, updated_at, deleted_at";
+  "id, email, full_name, first_name, last_name, sexe, date_naissance, nationalite, phone, promo, role, onboarding_completed, visible_in_plaquette, created_at, updated_at, deleted_at";
 
 /** Colonnes des tables liées — toutes les clés utilisées par PROFILE_COMPLETION_FIELD_KEYS */
 export const LINKED_SELECT_FOR_PROFILE_COMPLETION = {
@@ -132,7 +130,6 @@ export const PROFILE_FIELD_LABELS: Record<ProfileCompletionFieldKey, string> = {
   sexe: "Sexe",
   date_naissance: "Date de naissance",
   nationalite: "Nationalité",
-  cip_ifu: "CIP / IFU",
   photo: "Photo de profil",
   annee_entree: "Année d’entrée",
   annee_sortie: "Année de sortie",
@@ -166,7 +163,7 @@ export const PROFILE_FIELD_LABELS: Record<ProfileCompletionFieldKey, string> = {
 
 /** Groupes pour l’affichage des sections du profil */
 export const PROFILE_COMPLETION_STEP_GROUPS: (keyof ProfileRecord)[][] = [
-  ["sexe", "date_naissance", "nationalite", "cip_ifu", "photo"],
+  ["sexe", "date_naissance", "nationalite", "photo"],
   [
     "annee_entree",
     "annee_sortie",

@@ -346,7 +346,6 @@ export default function ProfilePage() {
                   {renderField("sexe")}
                   {renderField("date_naissance", "date")}
                   {renderField("nationalite")}
-                  {renderField("cip_ifu", "text", "CIP / IFU")}
                   {renderField("email", "email")}
                   {renderField("phone", "tel", "Téléphone")}
                 </div>
